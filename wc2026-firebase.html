@@ -1,0 +1,1862 @@
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-database-compat.js"></script>
+<script>
+  var firebaseConfig = {
+    apiKey: "AIzaSyA0IZZdDWQdSFiyID2n6Pt3nLKOMsb6x7U",
+    authDomain: "wc2026-predictor-44e07.firebaseapp.com",
+    databaseURL: "https://wc2026-predictor-44e07-default-rtdb.firebaseio.com",
+    projectId: "wc2026-predictor-44e07",
+    storageBucket: "wc2026-predictor-44e07.firebasestorage.app",
+    messagingSenderId: "349141872662",
+    appId: "1:349141872662:web:33001e98b52c9f10ccc537"
+  };
+  firebase.initializeApp(firebaseConfig);
+  var db = firebase.database();
+</script>
+<div id="app"></div>
+<style>
+  :root{
+    --bg-deep:#0A1128;
+    --bg-panel:#121B3A;
+    --bg-panel-2:#182552;
+    --line:#28335E;
+    --gold:#FFC845;
+    --gold-soft:#7A6324;
+    --blue:#2F80FF;
+    --text:#F4F6FB;
+    --muted:#8793B0;
+    --green:#34D399;
+    --red:#FF6B6B;
+  }
+  *{box-sizing:border-box;}
+  #app{
+    background:radial-gradient(120% 140% at 10% -10%, #16224C 0%, var(--bg-deep) 55%);
+    color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+    min-height:100%;
+    padding:0 0 60px 0;
+  }
+  .hero{
+    padding:36px 20px 28px;
+    background:
+      linear-gradient(135deg, rgba(47,128,255,0.25), rgba(255,200,69,0.08) 60%),
+      var(--bg-panel);
+    border-bottom:1px solid var(--line);
+    text-align:center;
+  }
+  .hero h1{
+    font-size:clamp(26px,6vw,44px);
+    font-weight:900;
+    letter-spacing:1px;
+    margin:0;
+    text-transform:uppercase;
+    background:linear-gradient(90deg,#FFE9A8,var(--gold) 40%,#fff 90%);
+    -webkit-background-clip:text;
+    background-clip:text;
+    color:transparent;
+  }
+  .hero .sub{
+    color:var(--muted);
+    font-size:14px;
+    margin-top:8px;
+    letter-spacing:0.5px;
+  }
+  .session-box{
+    max-width:420px;
+    margin:22px auto 0;
+    background:var(--bg-panel-2);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:14px 16px;
+  }
+  .session-box.logged-in{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+  }
+  .session-name{font-weight:800;font-size:15px;}
+  .session-tag{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;}
+  .code-row{display:flex;gap:8px;}
+  .code-row input{
+    flex:1;
+    background:var(--bg-deep);
+    border:1px solid var(--line);
+    border-radius:8px;
+    padding:10px 12px;
+    color:var(--text);
+    font-size:14px;
+    text-transform:uppercase;
+    letter-spacing:1px;
+  }
+  .code-row input:focus{outline:2px solid var(--blue);}
+  button{
+    cursor:pointer;
+    border:none;
+    border-radius:8px;
+    font-weight:700;
+    font-size:13px;
+    transition:transform .12s ease, opacity .12s ease;
+  }
+  button:active{transform:scale(0.97);}
+  button:focus-visible{outline:2px solid var(--gold);outline-offset:2px;}
+  .btn-primary{
+    background:linear-gradient(90deg,var(--blue),#5AA0FF);
+    color:#fff;
+    padding:10px 16px;
+  }
+  .btn-ghost{
+    background:transparent;
+    color:var(--muted);
+    border:1px solid var(--line);
+    padding:8px 12px;
+  }
+  .err{color:var(--red);font-size:12px;margin-top:8px;}
+  .section-title{
+    font-size:13px;
+    text-transform:uppercase;
+    letter-spacing:1.5px;
+    color:var(--muted);
+    margin:36px 20px 14px;
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+  .section-title:before, .section-title:after{
+    content:"";flex:1;height:1px;background:var(--line);
+  }
+  .dash-grid{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:14px;
+    max-width:920px;
+    margin:0 auto;
+    padding:0 20px;
+  }
+  @media(max-width:760px){.dash-grid{grid-template-columns:repeat(2,1fr);}}
+  @media(max-width:480px){.dash-grid{grid-template-columns:1fr;}}
+  .card{
+    background:var(--bg-panel-2);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:16px;
+    cursor:pointer;
+    position:relative;
+    overflow:hidden;
+  }
+  .card:hover{border-color:var(--blue);}
+  .card.mine{border-color:var(--gold);}
+  .card .pname{font-weight:800;font-size:15px;margin-bottom:2px;}
+  .card .pstatus{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;}
+  .ring-wrap{position:absolute;top:12px;right:12px;width:42px;height:42px;}
+  .progress-bar-track{
+    margin-top:12px;height:6px;border-radius:4px;background:var(--bg-deep);overflow:hidden;
+  }
+  .progress-bar-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--blue),var(--gold));}
+  .card .champ-line{margin-top:10px;font-size:12px;color:var(--gold);font-weight:700;}
+  .global-timer{
+    display:inline-flex;align-items:center;gap:6px;margin-top:14px;
+    background:rgba(255,200,69,0.12);border:1px solid var(--gold-soft);color:var(--gold);
+    font-size:12px;font-weight:700;padding:6px 14px;border-radius:999px;
+  }
+  .global-timer.locked{background:rgba(255,107,107,0.12);border-color:var(--red);color:var(--red);}
+  .deadline-exact{margin-top:5px;font-size:11px;color:var(--muted);}
+
+  .overlay{
+    position:fixed;inset:0;background:rgba(5,8,20,0.86);
+    display:flex;align-items:center;justify-content:center;
+    z-index:50;padding:24px 14px;
+  }
+  .overlay-panel{
+    background:var(--bg-deep);
+    border:1px solid var(--line);
+    border-radius:18px;
+    width:100%;max-width:640px;
+    max-height:90vh;
+    display:flex;flex-direction:column;
+    overflow:hidden;
+  }
+  .overlay-head{
+    flex:0 0 auto;
+    display:flex;align-items:center;justify-content:space-between;
+    padding:18px 20px;border-bottom:1px solid var(--line);
+    background:var(--bg-deep);border-radius:18px 18px 0 0;
+  }
+  .overlay-head h2{font-size:18px;margin:0;}
+  .poster{
+    background:linear-gradient(165deg,#0d1530,#05070f 70%);
+    border:1px solid var(--line);border-radius:18px;padding:36px 28px 34px;
+    width:100%;overflow-x:auto;margin-top:6px;
+    scrollbar-width:thin;scrollbar-color:var(--gold-soft) transparent;
+  }
+  .poster::-webkit-scrollbar{height:6px;}
+  .poster::-webkit-scrollbar-thumb{background:var(--gold-soft);border-radius:6px;}
+  .poster-title{
+    text-align:center;font-weight:900;letter-spacing:2px;font-size:clamp(15px,2.6vw,22px);color:var(--gold);
+    text-transform:uppercase;margin-bottom:20px;
+  }
+  .poster-title sup{font-size:.5em;}
+  .poster-row{display:flex;align-items:stretch;justify-content:space-between;gap:clamp(1px,0.5vw,10px);}
+  .poster-col{display:flex;flex-direction:column;justify-content:space-evenly;align-items:center;height:440px;flex:1;}
+  .ppair{display:flex;flex-direction:column;align-items:center;gap:1px;}
+  .pflag{line-height:1;display:block;text-align:center;}
+  .pflag.r32{font-size:clamp(20px,3.4vw,28px);}
+  .pflag.r16{font-size:clamp(26px,4.4vw,36px);}
+  .pflag.qf{font-size:clamp(32px,5.5vw,46px);}
+  .pflag.sf{font-size:clamp(38px,6.5vw,54px);}
+  .pflag.champ{font-size:clamp(52px,10vw,76px);margin-top:6px;}
+  .pflag-empty{opacity:.2;}
+  .pflag.p-win{filter:drop-shadow(0 0 6px rgba(255,200,69,.7));}
+  .pflag.p-lose{opacity:.25;filter:grayscale(.8);}
+  .pflag.p-path{filter:drop-shadow(0 0 5px rgba(47,128,255,.9));opacity:1;}
+  .pflag.p-highlight{filter:drop-shadow(0 0 10px rgba(255,200,69,1));opacity:1;transform:scale(1.15);transition:transform .15s ease;}
+  .pflag.p-dim{opacity:.12;filter:grayscale(.9);}
+  .pflag[data-matchid]:hover{transform:scale(1.18);transition:transform .12s ease;}
+
+  .poster-team-label{
+    text-align:center;font-size:clamp(12px,2vw,16px);margin-bottom:14px;
+    min-height:26px;color:var(--text);display:flex;align-items:center;justify-content:center;gap:6px;
+  }
+  .poster-team-label.empty{color:var(--muted);font-size:11px;opacity:.5;font-style:italic;}
+  .poster-label-close{
+    cursor:pointer;color:var(--muted);font-size:13px;padding:2px 6px;
+    border-radius:999px;border:1px solid var(--line);margin-left:4px;
+  }
+  .poster-label-close:hover{color:var(--red);border-color:var(--red);}
+  .poster-center{
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    width:clamp(90px,12vw,130px);flex-shrink:0;padding:0 6px;
+  }
+  .poster-trophy{font-size:clamp(48px,8vw,70px);filter:grayscale(1);opacity:.3;}
+  .poster-trophy.lit{filter:none;opacity:1;text-shadow:0 0 24px rgba(255,200,69,.8);}
+  .poster-champ-label{font-size:clamp(9px,1.4vw,13px);font-weight:800;letter-spacing:2px;color:var(--muted);text-align:center;margin-top:8px;line-height:1.3;}
+  .poster-champ-name{font-size:clamp(12px,2vw,18px);font-weight:800;color:var(--gold);text-align:center;margin-top:8px;}
+  .poster-champ-name.empty{color:var(--muted);font-weight:500;}
+  .poster-emblem{display:flex;flex-direction:column;align-items:center;justify-content:center;margin-top:28px;}
+  .emblem-trophy{font-size:clamp(36px,6vw,52px);filter:drop-shadow(0 0 14px rgba(255,200,69,.55));}
+  .emblem-26{
+    font-weight:900;font-size:clamp(32px,6vw,46px);letter-spacing:1px;color:var(--gold);
+    line-height:1;margin-top:2px;text-shadow:0 0 16px rgba(255,200,69,.4);
+  }
+  .emblem-label{font-size:clamp(9px,1.4vw,12px);font-weight:800;letter-spacing:2px;color:var(--muted);line-height:1.3;text-transform:uppercase;margin-top:4px;}
+  .view-toggle{display:flex;gap:6px;margin:0 20px 14px;}
+  .view-toggle button{flex:1;padding:8px;font-size:11px;background:var(--bg-panel-2);border:1px solid var(--line);color:var(--muted);border-radius:8px;}
+  .view-toggle button.active{background:linear-gradient(90deg,var(--blue),#5AA0FF);color:#fff;border-color:transparent;}
+  .overlay-head .deadline-inline{font-size:11px;color:var(--gold);font-weight:700;margin-top:2px;}
+
+  .carousel-wrap{max-width:880px;margin:18px auto 30px;padding:0 16px;touch-action:pan-y;}
+  .carousel-name{text-align:center;font-weight:800;font-size:14px;margin-bottom:10px;}
+  .carousel-poster{}
+  .carousel-nav{display:flex;align-items:center;justify-content:space-between;margin-top:12px;}
+  .carousel-nav button{font-size:18px;padding:6px 16px;}
+  .carousel-dots{display:flex;gap:7px;}
+  .dot{width:7px;height:7px;border-radius:50%;background:var(--line);cursor:pointer;}
+  .dot.active{background:var(--gold);}
+  .dot.dot-real{border:1px solid rgba(255,200,69,0.5);}
+  .dot.dot-real.active{background:var(--gold);}
+  .save-row{
+    display:flex;flex-wrap:wrap;gap:8px;justify-content:center;
+    margin:18px 20px 4px;
+  }
+  .save-pill{
+    background:var(--bg-panel-2);border:1px solid var(--line);border-radius:999px;
+    padding:6px 14px;font-size:11px;color:var(--muted);font-weight:600;
+  }
+  .save-pill.ok{color:var(--green);border-color:rgba(52,211,153,0.4);}
+  .close-x{background:transparent;color:var(--muted);font-size:20px;padding:4px 10px;}
+  .overlay-body{
+    flex:1 1 auto;overflow-y:auto;padding-bottom:20px;
+  }
+
+  .trophy-zone{
+    text-align:center;padding:22px 20px 6px;
+  }
+  .trophy-zone .trophy{font-size:42px;filter:grayscale(1);opacity:0.35;transition:all .3s ease;}
+  .trophy-zone.done .trophy{filter:none;opacity:1;text-shadow:0 0 24px rgba(255,200,69,.7);}
+  .trophy-zone .champ-name{margin-top:6px;font-weight:900;font-size:18px;letter-spacing:.5px;}
+  .trophy-zone .champ-name.empty{color:var(--muted);font-weight:500;font-size:13px;}
+
+  .round{margin:0 20px 18px;border:1px solid var(--line);border-radius:14px;overflow:hidden;background:var(--bg-panel);}
+  .round-head{
+    padding:12px 16px;display:flex;align-items:center;justify-content:space-between;
+    background:var(--bg-panel-2);cursor:pointer;
+  }
+  .round-head .rname{font-weight:800;font-size:13px;text-transform:uppercase;letter-spacing:1px;}
+  .round-head .rcount{font-size:11px;color:var(--muted);}
+  .round-head .rcount.full{color:var(--green);}
+  .round-body{padding:10px 12px;}
+  .round-body.collapsed{display:none;}
+  .round.locked .round-head{opacity:.45;cursor:default;}
+
+  .match{
+    display:flex;align-items:stretch;gap:8px;margin:8px 0;
+  }
+  .team-btn{
+    flex:1;display:flex;align-items:center;gap:8px;
+    background:var(--bg-deep);border:1px solid var(--line);
+    border-radius:10px;padding:10px 12px;color:var(--text);
+    font-size:13px;text-align:left;font-weight:600;
+  }
+  .team-btn .flag{font-size:18px;}
+  .team-btn:disabled{opacity:.55;cursor:not-allowed;}
+  .team-btn.picked{border:2px solid var(--gold);box-shadow:0 0 0 1px rgba(255,200,69,0.25) inset;}
+  .team-btn.loser{opacity:.4;}
+  .team-btn.actually-right{border:2px solid var(--green);background:rgba(52,211,153,0.18);}
+  .team-btn.wrong-pick{border:2px solid var(--red);background:rgba(255,107,107,0.18);}
+  .team-btn.picked.actually-right{border:2px solid var(--gold);background:rgba(255,200,69,0.12);box-shadow:0 0 0 1px rgba(52,211,153,0.35) inset;}
+  .real-badge{margin-left:auto;font-size:13px;}
+  .real-badge.wrong{filter:none;}
+  .vs{align-self:center;color:var(--muted);font-size:11px;font-weight:700;padding:0 2px;}
+
+  .readonly-note{
+    margin:0 20px 14px;font-size:12px;color:var(--muted);
+    background:var(--bg-panel-2);border:1px solid var(--line);
+    border-radius:10px;padding:10px 14px;
+  }
+  .tabs{
+    display:flex;gap:6px;justify-content:center;flex-wrap:wrap;
+    margin:22px auto 0;max-width:560px;padding:0 20px;
+  }
+  .tab-btn{
+    background:var(--bg-panel-2);border:1px solid var(--line);color:var(--muted);
+    padding:9px 16px;border-radius:999px;font-size:12px;text-transform:uppercase;letter-spacing:.5px;
+  }
+  .tab-btn.active{background:linear-gradient(90deg,var(--blue),#5AA0FF);color:#fff;border-color:transparent;}
+
+  .compare-wrap{max-width:760px;margin:0 auto;padding:0 20px;}
+  .compare-pickers{display:flex;gap:10px;margin-bottom:18px;}
+  .compare-pickers select{
+    flex:1;background:var(--bg-panel-2);border:1px solid var(--line);color:var(--text);
+    border-radius:10px;padding:10px;font-size:13px;
+  }
+  .cmp-round{margin-bottom:16px;border:1px solid var(--line);border-radius:12px;overflow:hidden;}
+  .cmp-round-head{background:var(--bg-panel-2);padding:10px 14px;font-size:12px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);font-weight:800;}
+  .cmp-pair{
+    padding:8px 14px 0;font-size:11px;color:var(--muted);font-weight:700;
+    text-transform:uppercase;letter-spacing:.3px;border-top:1px solid var(--line);
+  }
+  .cmp-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:6px 14px 8px;}
+  .cmp-cell{font-size:13px;padding:8px 10px;border-radius:8px;background:var(--bg-panel);border-left:5px solid transparent;}
+  .cmp-cell.match{border-left:5px solid var(--green);}
+  .cmp-cell.empty{color:var(--muted);font-style:italic;}
+  .cmp-correct-badge{
+    display:inline-flex;align-items:center;gap:3px;margin-left:8px;
+    background:rgba(52,211,153,0.2);color:var(--green);
+    font-size:10px;font-weight:800;letter-spacing:.3px;text-transform:uppercase;
+    padding:2px 8px;border-radius:999px;vertical-align:middle;
+  }
+
+  .lb-table{max-width:640px;margin:0 auto;padding:0 20px;}
+  .lb-row{
+    display:flex;align-items:center;justify-content:space-between;
+    background:var(--bg-panel-2);border:1px solid var(--line);border-radius:12px;
+    padding:12px 16px;margin-bottom:8px;transition:border-color .15s ease;
+  }
+  .lb-row:hover{border-color:var(--blue);}
+  .lb-row.lb-mine{border-color:var(--gold);}
+  .lb-row .lb-rank{font-weight:900;font-size:18px;width:32px;text-align:center;}
+  .lb-row .lb-name{flex:1;font-weight:700;font-size:14px;padding:0 10px;}
+  .lb-row .lb-score{font-weight:900;font-size:16px;color:var(--blue);}
+  .lb-empty{text-align:center;color:var(--muted);font-size:13px;padding:30px 20px;}
+
+  /* ---------- BL таблиця ---------- */
+  .bl-tab{max-width:900px;margin:0 auto;padding:0 20px;}
+  .bl-controls{display:flex;gap:8px;justify-content:center;margin-bottom:14px;}
+  .bl-sort-btn{
+    background:var(--bg-panel-2);border:1px solid var(--line);color:var(--muted);
+    padding:8px 14px;border-radius:999px;font-size:12px;text-transform:uppercase;letter-spacing:.4px;
+  }
+  .bl-sort-btn.active{background:linear-gradient(90deg,var(--blue),#5AA0FF);color:#fff;border-color:transparent;}
+  .bl-scroll{overflow-x:auto;border:1px solid var(--line);border-radius:14px;-webkit-overflow-scrolling:touch;}
+  table.bl-table{border-collapse:collapse;width:100%;min-width:680px;font-size:13px;}
+  table.bl-table thead th{
+    background:var(--bg-panel-2);color:var(--muted);font-size:11px;text-transform:uppercase;
+    letter-spacing:.4px;padding:10px 8px;border-bottom:1px solid var(--line);white-space:nowrap;text-align:center;
+  }
+  table.bl-table thead th:first-child{text-align:left;padding-left:14px;}
+  table.bl-table td{padding:8px;border-bottom:1px solid var(--line);text-align:center;white-space:nowrap;}
+  table.bl-table tr:last-child td{border-bottom:none;}
+  .bl-name-cell{display:flex;align-items:center;gap:6px;text-align:left!important;padding-left:14px!important;font-weight:700;}
+  .bl-move{display:flex;flex-direction:column;gap:1px;}
+  .bl-move-btn{
+    background:var(--bg-panel);border:1px solid var(--line);color:var(--muted);
+    font-size:9px;line-height:1;padding:2px 4px;border-radius:4px;
+  }
+  .bl-move-btn:disabled{opacity:.25;}
+  .bl-cell{
+    background:var(--bg-panel-2);border:1px solid var(--line);color:var(--text);
+    border-radius:8px;padding:6px 10px;font-weight:800;font-size:13px;min-width:50px;
+  }
+  .bl-cell:hover{border-color:var(--blue);}
+  .bl-cell-sub{color:var(--muted);font-weight:500;font-size:11px;}
+  .bl-cell-bonus{color:var(--gold);}
+  .bl-cell-static{font-weight:800;color:var(--text);}
+  .bl-bracket-input{
+    width:52px;background:var(--bg-panel-2);border:1px solid var(--line);color:var(--text);
+    border-radius:8px;padding:6px 4px;font-weight:800;font-size:13px;text-align:center;
+  }
+  .bl-bracket-input:focus{outline:2px solid var(--blue);}
+  .bl-total-cell{font-weight:900;font-size:15px;color:var(--gold);}
+  .bl-panel{
+    margin-top:14px;background:var(--bg-panel-2);border:1px solid var(--line);border-radius:14px;
+    padding:16px 18px;
+  }
+  .bl-panel-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;font-size:14px;}
+  .bl-panel-close{
+    background:var(--bg-panel);border:1px solid var(--line);color:var(--muted);
+    border-radius:8px;padding:4px 10px;font-size:12px;
+  }
+  .bl-panel-legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:11px;color:var(--muted);margin-bottom:12px;align-items:center;}
+  .legend-dot{display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--bg-panel);margin-right:4px;vertical-align:middle;}
+  .legend-dot.bonus-win{border:2px solid var(--gold);}
+  .legend-dot.bonus-lose{border:2px solid var(--orange);}
+  .bl-track{margin-bottom:14px;}
+  .bl-track:last-child{margin-bottom:0;}
+  .bl-track-label{font-size:12px;color:var(--muted);font-weight:700;margin-bottom:8px;}
+  .bl-dots{display:flex;flex-wrap:wrap;gap:6px;}
+  .bl-dot{
+    width:16px;height:16px;border-radius:50%;background:var(--bg-panel);
+    border:1px solid var(--line);display:inline-block;box-sizing:border-box;
+  }
+  .bl-dot.filled{background:var(--green);border-color:var(--green);}
+  .bl-dot.editable{cursor:pointer;}
+  .bl-dot.editable:hover{border-color:var(--blue);}
+  .bl-dot.bonus-win{box-shadow:0 0 0 2px var(--gold);}
+  .bl-dot.bonus-lose{box-shadow:0 0 0 2px var(--orange);}
+
+  footer.note{
+    text-align:center;color:var(--muted);font-size:11px;font-style:italic;opacity:.65;
+    margin:56px auto 0;padding:18px 20px 0;max-width:480px;
+    border-top:1px solid var(--line);
+  }
+</style>
+<script>
+(function(){
+  // ---------- static data ----------
+  var PARTICIPANTS = {
+    "MK73XQ": "Матвій Ковальчук",
+    "IR48NL": "Іван Рудьковський",
+    "AL92PK": "Антон Ляшенко",
+    "OS61TV": "Остап Сахарнацький",
+    "VF25HZ": "Віталій Фурдичко",
+    "OF84WY": "Олександр Фурдичко"
+  };
+  var ADMIN_CODE = "ADMIN2026";
+  var REAL_CODE = "REAL";
+  var REAL_NAME = "Офіційні результати";
+
+  // ─── Авто-синхронізація результатів через Claude AI (обходить CORS) ──────
+  var FDORG_KEY = "80b6a2672df34e429a3dcae17cbcd643"; // збережено, але використовується Claude як proxy
+  var fdSyncStatus = "idle"; // idle | loading | ok | error
+
+  var TEAM_MAP_EN_UA = {
+    "South Africa":"Південна Африка","Canada":"Канада","Netherlands":"Нідерланди","Morocco":"Марокко",
+    "Germany":"Німеччина","Paraguay":"Парагвай","France":"Франція","Sweden":"Швеція",
+    "United States":"США","USA":"США","Bosnia and Herzegovina":"Боснія і Герцеговина","Bosnia":"Боснія і Герцеговина",
+    "Belgium":"Бельгія","Senegal":"Сенегал","Portugal":"Португалія","Croatia":"Хорватія",
+    "Spain":"Іспанія","Austria":"Австрія","Brazil":"Бразилія","Japan":"Японія",
+    "Ivory Coast":"Кот-д'Івуар","Cote d'Ivoire":"Кот-д'Івуар","Norway":"Норвегія",
+    "Mexico":"Мексика","Ecuador":"Еквадор","England":"Англія",
+    "DR Congo":"ДР Конго","Congo DR":"ДР Конго","Democratic Republic of Congo":"ДР Конго",
+    "Argentina":"Аргентина","Cabo Verde":"Кабо-Верде","Cape Verde":"Кабо-Верде",
+    "Australia":"Австралія","Egypt":"Єгипет","Switzerland":"Швейцарія",
+    "Algeria":"Алжир","Colombia":"Колумбія","Ghana":"Гана"
+  };
+
+  function applyResultsToSlots(resultMatches, existingWinners){
+    var allValidTeams = {};
+    R32_PAIRS.forEach(function(p){ allValidTeams[p[0]]=true; allValidTeams[p[1]]=true; });
+    var newWinners = Object.assign({}, existingWinners);
+    var changed = false;
+    var ROUND_KEYS = ["r32","r16","qf","sf","final"];
+    resultMatches.forEach(function(m){
+      var rk = m.round;
+      if (!rk || ROUND_KEYS.indexOf(rk) === -1) return;
+      var winnerUa = TEAM_MAP_EN_UA[m.winner] || m.winner;
+      // Only accept winners that are actual teams in our bracket
+      if (rk === "r32" && !allValidTeams[winnerUa]) return;
+      var teamAUa = TEAM_MAP_EN_UA[m.teamA] || m.teamA;
+      var teamBUa = TEAM_MAP_EN_UA[m.teamB] || m.teamB;
+      var slots = getRound(rk, newWinners);
+      slots.forEach(function(slot){
+        var match = (slot.teamA === teamAUa && slot.teamB === teamBUa) ||
+                    (slot.teamA === teamBUa && slot.teamB === teamAUa);
+        if (match && newWinners[slot.id] !== winnerUa){
+          newWinners[slot.id] = winnerUa;
+          changed = true;
+        }
+      });
+    });
+    return {winners: newWinners, changed: changed};
+  }
+
+  async function syncFromAPI(){
+    fdSyncStatus = "loading"; render();
+    try {
+      var fdUrl = "https://api.football-data.org/v4/competitions/WC/matches?season=2026&token="+FDORG_KEY;
+      var proxyUrl = "https://api.allorigins.win/raw?url=" + encodeURIComponent(fdUrl);
+      var fdResp = await fetch(proxyUrl);
+      if (fdResp.ok){
+        var fdJson = await fdResp.json();
+        var fdMatches = (fdJson.matches || []).filter(function(m){ return m.status === "FINISHED"; });
+        var stageMap = {"LAST_16":"r32","ROUND_OF_32":"r32","LAST_8":"r16","ROUND_OF_16":"r16","QUARTER_FINALS":"qf","SEMI_FINALS":"sf","FINAL":"final"};
+        var converted = fdMatches.map(function(m){
+          return {
+            round: stageMap[m.stage] || stageMap[m.round] || null,
+            teamA: m.homeTeam.name, teamB: m.awayTeam.name,
+            winner: m.score.winner === "HOME_TEAM" ? m.homeTeam.name : m.awayTeam.name
+          };
+        }).filter(function(m){ return m.round; });
+        if (converted.length > 0){
+          var existing = state.allPicks[REAL_CODE] || {winners:{}, updatedAt:null};
+          var result = applyResultsToSlots(converted, existing.winners || {});
+          var newData = {winners: result.winners, updatedAt: Date.now(), submittedWinners: result.winners, submittedAt: Date.now()};
+          state.allPicks[REAL_CODE] = newData;
+          savePicks(REAL_CODE, newData);
+          fdSyncStatus = "ok"; render(); return;
+        }
+      }
+    } catch(e){ /* proxy failed */ }
+    fdSyncStatus = "error"; render();
+  }
+  // ────────────────────────────────────────────────────────────────────────
+  // Дедлайн подачі/редагування прогнозів. Зміни цю дату на потрібну (формат: рік-місяць-деньTгодина:хвилина:секунда+часовий пояс).
+  var DEADLINE_TS_DEFAULT = new Date("2026-07-01T19:00:00+03:00").getTime();
+  var DEADLINE_TS = DEADLINE_TS_DEFAULT; // may be overridden after storage load
+
+  var FLAGS = {
+    "Південна Африка":"🇿🇦","Канада":"🇨🇦","Нідерланди":"🇳🇱","Марокко":"🇲🇦",
+    "Німеччина":"🇩🇪","Парагвай":"🇵🇾","Франція":"🇫🇷","Швеція":"🇸🇪",
+    "США":"🇺🇸","Боснія і Герцеговина":"🇧🇦","Бельгія":"🇧🇪","Сенегал":"🇸🇳",
+    "Португалія":"🇵🇹","Хорватія":"🇭🇷","Іспанія":"🇪🇸","Австрія":"🇦🇹",
+    "Бразилія":"🇧🇷","Японія":"🇯🇵","Кот-д'Івуар":"🇨🇮","Норвегія":"🇳🇴",
+    "Мексика":"🇲🇽","Еквадор":"🇪🇨","Англія":"🏴󠁧󠁢󠁥󠁮󠁧󠁿","ДР Конго":"🇨🇩",
+    "Аргентина":"🇦🇷","Кабо-Верде":"🇨🇻","Австралія":"🇦🇺","Єгипет":"🇪🇬",
+    "Швейцарія":"🇨🇭","Алжир":"🇩🇿","Колумбія":"🇨🇴","Гана":"🇬🇭"
+  };
+
+  // Simplified hand-drawn flag SVGs (viewBox 0 0 60 40), no network calls needed.
+  function hStripes(colors){ var h=40/colors.length; return colors.map(function(c,i){return '<rect x="0" y="'+(i*h)+'" width="60" height="'+h+'" fill="'+c+'"/>';}).join(''); }
+  function vStripes(colors){ var w=60/colors.length; return colors.map(function(c,i){return '<rect x="'+(i*w)+'" y="0" width="'+w+'" height="40" fill="'+c+'"/>';}).join(''); }
+  function star(cx,cy,r,fill){
+    var pts=[]; for(var i=0;i<10;i++){var a=Math.PI/2 + i*Math.PI/5; var rad=i%2===0?r:r*0.45; pts.push((cx+rad*Math.cos(a)).toFixed(1)+','+(cy-rad*Math.sin(a)).toFixed(1));}
+    return '<polygon points="'+pts.join(' ')+'" fill="'+fill+'"/>';
+  }
+  var FLAG_SVGS = {
+    "Південна Африка": hStripes(["#000","#FFB81C","#007749"])+'<polygon points="0,0 22,20 0,40" fill="#000"/><polygon points="0,4 26,20 0,36" fill="#FFF"/><polygon points="0,8 28,20 0,32" fill="#DE3831"/><polygon points="0,16 14,20 0,24" fill="#002395"/>',
+    "Канада": vStripes(["#D52B1E","#FFF","#D52B1E"])+star(30,20,7,"#D52B1E"),
+    "Нідерланди": hStripes(["#AE1C28","#FFF","#21468B"]),
+    "Марокко": '<rect width="60" height="40" fill="#C1272D"/>'+star(30,20,7,"#006233"),
+    "Німеччина": hStripes(["#000","#DD0000","#FFCE00"]),
+    "Парагвай": hStripes(["#D52B1E","#FFF","#0038A8"]),
+    "Франція": vStripes(["#0055A4","#FFF","#EF4135"]),
+    "Швеція": '<rect width="60" height="40" fill="#006AA7"/><rect x="20" width="8" height="40" fill="#FECC00"/><rect y="16" width="60" height="8" fill="#FECC00"/>',
+    "США": hStripes(["#B22234","#FFF","#B22234","#FFF","#B22234","#FFF","#B22234"])+'<rect width="26" height="22" fill="#3C3B6E"/>',
+    "Боснія і Герцеговина": '<rect width="60" height="40" fill="#002395"/><polygon points="0,0 24,0 60,40 36,40" fill="#FECB00"/>'+star(14,8,2.4,"#FFF")+star(20,16,2.4,"#FFF")+star(26,24,2.4,"#FFF")+star(32,32,2.4,"#FFF"),
+    "Бельгія": vStripes(["#000","#FAE042","#ED2939"]),
+    "Сенегал": vStripes(["#00853F","#FDEF42","#E31B23"])+star(30,20,5,"#00853F"),
+    "Португалія": '<rect width="60" height="40" fill="#FF0000"/><rect width="24" height="40" fill="#046A38"/><circle cx="24" cy="20" r="7" fill="#FFCC00"/>',
+    "Хорватія": hStripes(["#FF0000","#FFF","#171796"]),
+    "Іспанія": '<rect width="60" height="40" fill="#AA151B"/><rect y="10" width="60" height="20" fill="#F1BF00"/>',
+    "Австрія": hStripes(["#ED2939","#FFF","#ED2939"]),
+    "Бразилія": '<rect width="60" height="40" fill="#009739"/><polygon points="30,5 56,20 30,35 4,20" fill="#FEDD00"/><circle cx="30" cy="20" r="8" fill="#012169"/>',
+    "Японія": '<rect width="60" height="40" fill="#FFF"/><circle cx="30" cy="20" r="11" fill="#BC002D"/>',
+    "Кот-д'Івуар": vStripes(["#FF8200","#FFF","#009E60"]),
+    "Норвегія": '<rect width="60" height="40" fill="#EF2B2D"/><rect x="18" width="8" height="40" fill="#FFF"/><rect y="16" width="60" height="8" fill="#FFF"/><rect x="20" width="4" height="40" fill="#002868"/><rect y="18" width="60" height="4" fill="#002868"/>',
+    "Мексика": vStripes(["#006847","#FFF","#CE1126"]),
+    "Еквадор": '<rect width="60" height="40" fill="#FFD100"/><rect y="20" width="60" height="10" fill="#0038A8"/><rect y="30" width="60" height="10" fill="#EE1C25"/>',
+    "Англія": '<rect width="60" height="40" fill="#FFF"/><rect x="24" width="12" height="40" fill="#CE1124"/><rect y="14" width="60" height="12" fill="#CE1124"/>',
+    "ДР Конго": '<rect width="60" height="40" fill="#007FFF"/><polygon points="0,40 12,40 60,4 60,0 48,0" fill="#F7D618" stroke="#CE1021" stroke-width="2"/>'+star(10,10,3,"#F7D618"),
+    "Аргентина": hStripes(["#74ACDF","#FFF","#74ACDF"])+'<circle cx="30" cy="20" r="5" fill="#F6B40E"/>',
+    "Кабо-Верде": '<rect width="60" height="40" fill="#003893"/><rect y="22" width="60" height="3" fill="#FFF"/><rect y="25" width="60" height="2" fill="#F7D116"/><rect y="27" width="60" height="3" fill="#CF2027"/>'+star(15,12,2,"#FFF")+star(22,8,2,"#FFF")+star(29,7,2,"#FFF")+star(36,8,2,"#FFF")+star(43,12,2,"#FFF"),
+    "Австралія": '<rect width="60" height="40" fill="#00008B"/><rect width="28" height="18" fill="#00008B"/><path d="M0,0 L28,18 M28,0 L0,18" stroke="#FFF" stroke-width="2.5"/><path d="M0,0 L28,18 M28,0 L0,18" stroke="#CE1124" stroke-width="1.2"/>'+star(45,28,4,"#FFF")+star(45,10,2,"#FFF")+star(52,18,2,"#FFF"),
+    "Єгипет": hStripes(["#CE1126","#FFF","#000"]),
+    "Швейцарія": '<rect width="60" height="40" fill="#D52B1E"/><rect x="25" y="12" width="10" height="16" fill="#FFF"/><rect x="20" y="17" width="20" height="6" fill="#FFF"/>',
+    "Алжир": vStripes(["#006233","#FFF"])+'<path d="M34,12 a8,8 0 1,0 0,16 a6.4,6.4 0 1,1 0,-16" fill="#D21034"/>'+star(40,20,3,"#D21034"),
+    "Колумбія": '<rect width="60" height="40" fill="#FCD116"/><rect y="20" width="60" height="10" fill="#003893"/><rect y="30" width="60" height="10" fill="#CE1126"/>',
+    "Гана": hStripes(["#CE1126","#FCD116","#006B3F"])+star(30,20,4,"#000")
+  };
+
+  var FLAG_CODES = {
+    "Південна Африка":"za","Канада":"ca","Нідерланди":"nl","Марокко":"ma",
+    "Німеччина":"de","Парагвай":"py","Франція":"fr","Швеція":"se",
+    "США":"us","Боснія і Герцеговина":"ba","Бельгія":"be","Сенегал":"sn",
+    "Португалія":"pt","Хорватія":"hr","Іспанія":"es","Австрія":"at",
+    "Бразилія":"br","Японія":"jp","Кот-д'Івуар":"ci","Норвегія":"no",
+    "Мексика":"mx","Еквадор":"ec","Англія":"gb-eng","ДР Конго":"cd",
+    "Аргентина":"ar","Кабо-Верде":"cv","Австралія":"au","Єгипет":"eg",
+    "Швейцарія":"ch","Алжир":"dz","Колумбія":"co","Гана":"gh"
+  };
+
+  var R32_PAIRS = [
+    ["Південна Африка","Канада"],["Нідерланди","Марокко"],
+    ["Німеччина","Парагвай"],["Франція","Швеція"],
+    ["США","Боснія і Герцеговина"],["Бельгія","Сенегал"],
+    ["Португалія","Хорватія"],["Іспанія","Австрія"],
+    ["Бразилія","Японія"],["Кот-д'Івуар","Норвегія"],
+    ["Мексика","Еквадор"],["Англія","ДР Конго"],
+    ["Аргентина","Кабо-Верде"],["Австралія","Єгипет"],
+    ["Швейцарія","Алжир"],["Колумбія","Гана"]
+  ];
+
+  var ROUND_DEFS = [
+    {key:"r32", label:"1/16 фіналу", count:16},
+    {key:"r16", label:"1/8 фіналу", count:8},
+    {key:"qf",  label:"Чвертьфінал", count:4},
+    {key:"sf",  label:"Півфінал", count:2},
+    {key:"final", label:"Фінал", count:1}
+  ];
+
+  // ---------- state ----------
+  var state = {
+    session: null,            // {code, name, isAdmin}
+    openOverlayCode: null,    // which participant's bracket is open in modal
+    allPicks: {},             // code -> {winners:{}, updatedAt, submitted}
+    expandedRound: {r32:true, r16:true, qf:true, sf:true, final:true},
+    activeTab: "dash",        // dash | compare | leaderboard
+    compareA: null,
+    compareB: null,
+    confirmSubmit: false,
+    confirmReset: false,
+    adminPeekDraft: {},       // code -> bool, admin-only toggle to peek live draft
+    posterView: {},           // code -> bool, list vs poster view inside overlay
+    highlightTeam: null,      // team name currently highlighted in poster
+    carouselIndex: 0,
+    importMsg: null,
+    bracketEditMode: {},      // code -> bool, whether currently in editable draft mode
+    loading: true,
+    err: "",
+    blTable: null,
+    blExpanded: null
+  };
+
+  function save() { render(); }
+
+  // ---------- storage helpers ----------
+  async function loadAll(){
+    var result = {};
+    var codes = Object.keys(PARTICIPANTS).concat([REAL_CODE]);
+    for (var i=0;i<codes.length;i++){
+      var code = codes[i];
+      try{
+        var snapshot = await db.ref('picks/' + code).get();
+        result[code] = snapshot.exists() ? JSON.parse(snapshot.val()) : {winners:{}, updatedAt:null, submittedWinners:null, submittedAt:null};
+      }catch(e){
+        result[code] = {winners:{}, updatedAt:null, submittedWinners:null, submittedAt:null};
+      }
+    }
+    return result;
+  }
+
+  var saveTimers = {};
+  var saveBusy = {};
+  var savePending = {};
+
+  function savePicks(code, data){
+    // debounce: collapse rapid successive clicks into one write
+    savePending[code] = data;
+    if (saveTimers[code]) clearTimeout(saveTimers[code]);
+    saveTimers[code] = setTimeout(function(){
+      flushSave(code);
+    }, 400);
+  }
+
+  async function flushSave(code, attempt){
+    attempt = attempt || 0;
+    if (saveBusy[code]){
+      // a write is already in flight; try again shortly once it's done
+      setTimeout(function(){ flushSave(code, attempt); }, 300);
+      return;
+    }
+    var data = savePending[code];
+    if (!data) return;
+    saveBusy[code] = true;
+    var payload = JSON.stringify(data);
+    try{
+      await db.ref('picks/' + code).set(payload);
+      delete savePending[code];
+    }catch(e){
+      if (attempt < 4){
+        var delay = 1200 * Math.pow(2, attempt); // backoff: 1.2s, 2.4s, 4.8s, 9.6s
+        setTimeout(function(){ flushSave(code, attempt+1); }, delay);
+      }
+      // silent — transient storage errors are expected under load
+    } finally {
+      saveBusy[code] = false;
+    }
+  }
+
+  // ---------- bracket logic ----------
+  function getRound(roundKey, winners){
+    if (roundKey === "r32"){
+      return R32_PAIRS.map(function(pair, i){
+        var id = "r32-"+(i+1);
+        return {id:id, teamA:pair[0], teamB:pair[1], winner: winners[id]||null};
+      });
+    }
+    var prevKey = {"r16":"r32","qf":"r16","sf":"qf","final":"sf"}[roundKey];
+    var prevRound = getRound(prevKey, winners);
+    var matches = [];
+    for (var i=0; i<prevRound.length; i+=2){
+      var id = roundKey+"-"+((i/2)+1);
+      var a = prevRound[i].winner;
+      var b = prevRound[i+1].winner;
+      matches.push({id:id, teamA:a, teamB:b, winner: winners[id]||null});
+    }
+    return matches;
+  }
+
+  function posterFlagSpan(team, sizeClass, role){
+    if (!team) return '<span class="pflag '+sizeClass+' pflag-empty">🏳️</span>';
+    var flag = FLAGS[team] || '🏳️';
+    return '<span class="pflag '+sizeClass+' '+role+'" title="'+team+'">'+flag+'</span>';
+  }
+
+  function getTeamPath(matchId){
+    var order = ["r32","r16","qf","sf","final"];
+    var parts = matchId.split("-");
+    var rk = parts[0]; var num = parseInt(parts[1],10);
+    var path = {};
+    var idx = order.indexOf(rk);
+    for (var i=idx; i<order.length; i++){
+      path[order[i]+"-"+num] = true;
+      num = Math.ceil(num/2);
+    }
+    return path;
+  }
+
+  function posterFlagSpan(team, sizeClass, role, matchId, highlighted, onPath, hasHighlight){
+    if (!team) return '<span class="pflag '+sizeClass+' pflag-empty">🏳️</span>';
+    var flag = FLAGS[team] || "🏳️";
+    var dimmed = hasHighlight && !onPath && !highlighted ? ' p-dim' : '';
+    var glow = highlighted ? ' p-highlight' : (onPath ? ' p-path' : '');
+    var dataAttrs = matchId ? ' data-team="'+team.replace(/"/g,'&quot;')+'" data-matchid="'+matchId+'"' : '';
+    return '<span class="pflag '+sizeClass+' '+role+glow+dimmed+'"'+dataAttrs+' style="cursor:'+(matchId?'pointer':'default')+';">'+flag+'</span>';
+  }
+
+  function posterPairHTML(match, sizeClass, pathSet, highlightTeam){
+    var hasHighlight = !!highlightTeam;
+    var hasWinner = !!match.winner;
+    var roleA = hasWinner ? (match.winner === match.teamA ? 'p-win' : 'p-lose') : '';
+    var roleB = hasWinner ? (match.winner === match.teamB ? 'p-win' : 'p-lose') : '';
+    var onPath = !!(pathSet && pathSet[match.id]);
+    var hlA = onPath && highlightTeam === match.teamA;
+    var hlB = onPath && highlightTeam === match.teamB;
+    return '<div class="ppair">'
+      + posterFlagSpan(match.teamA, sizeClass, roleA, match.id, hlA, onPath, hasHighlight)
+      + posterFlagSpan(match.teamB, sizeClass, roleB, match.id, hlB, onPath, hasHighlight)
+      + '</div>';
+  }
+
+  function posterColHTML(matches, sizeClass, pathSet, highlightTeam){
+    return '<div class="poster-col">' + matches.map(function(m){
+      return posterPairHTML(m, sizeClass, pathSet, highlightTeam);
+    }).join('') + '</div>';
+  }
+
+  function posterHTML(winners){
+    var r32 = getRound("r32", winners);
+    var r16 = getRound("r16", winners);
+    var qf = getRound("qf", winners);
+    var sf = getRound("sf", winners);
+    var final = getRound("final", winners);
+    var champion = final[0] ? final[0].winner : null;
+    var ht = state.highlightTeam;
+
+    // find which match the highlighted team starts in
+    var pathSet = null;
+    if (ht){
+      var startMatch = null;
+      r32.forEach(function(m){ if (m.teamA===ht || m.teamB===ht) startMatch=m.id; });
+      if (startMatch) pathSet = getTeamPath(startMatch);
+    }
+
+    var hasHl = !!ht;
+    var leftR32 = r32.slice(0,8), rightR32 = r32.slice(8,16);
+    var leftR16 = r16.slice(0,4), rightR16 = r16.slice(4,8);
+    var leftQF = qf.slice(0,2), rightQF = qf.slice(2,4);
+    var leftSF = [sf[0]], rightSF = [sf[1]];
+
+    var teamLabel = ht
+      ? '<div class="poster-team-label" id="posterTeamLabel">'+(FLAGS[ht]||'')+'  <strong>'+ht+'</strong> <span class="poster-label-close" data-clearhighlight="1">✕</span></div>'
+      : '<div class="poster-team-label empty">натисни на прапор щоб побачити шлях команди</div>';
+
+    return '<div class="poster" id="posterEl">'
+      + '<div class="poster-title">FIFA WORLD CUP 2026<sup>™</sup></div>'
+      + teamLabel
+      + '<div class="poster-row">'
+        + posterColHTML(leftR32,'r32',pathSet,ht) + posterColHTML(leftR16,'r16',pathSet,ht) + posterColHTML(leftQF,'qf',pathSet,ht) + posterColHTML(leftSF,'sf',pathSet,ht)
+        + '<div class="poster-center">'
+          + '<div class="poster-trophy'+(champion?' lit':'')+'">🏆</div>'
+          + '<div class="poster-champ-label">WORLD<br/>CHAMPION</div>'
+          + posterFlagSpan(champion,'champ',champion?'p-win':'',null,hasHl&&champion===ht,hasHl&&champion===ht,hasHl)
+          + (champion ? '<div class="poster-champ-name">'+champion+'</div>' : '<div class="poster-champ-name empty">?</div>')
+        + '</div>'
+        + posterColHTML(rightSF,'sf',pathSet,ht) + posterColHTML(rightQF,'qf',pathSet,ht) + posterColHTML(rightR16,'r16',pathSet,ht) + posterColHTML(rightR32,'r32',pathSet,ht)
+      + '</div>'
+    + '</div>';
+  }
+
+  function countFilled(winners){
+    var n = 0;
+    for (var k in winners){ if (winners[k]) n++; }
+    return n;
+  }
+  var TOTAL_MATCHES = 31;
+
+
+  // ---------- BL таблиця (ручний залік) ----------
+  var GROUP_MATCH_COUNT = 72;
+  var GROUP_LETTERS = ["A","B","C","D","E","F","G","H","I","J","K","L"];
+  var BL_BASE = {group:1, playoff:2, advance:1, bracket:1};
+  var BL_STREAK_WIN = 3;
+  var BL_STREAK_LOSE = 5;
+
+  function buildGroupMatchList(){
+    var list = [];
+    for (var g=0; g<GROUP_LETTERS.length; g++){
+      for (var m=1; m<=6; m++){
+        list.push({id:"grp-"+GROUP_LETTERS[g]+"-"+m, label:"Група "+GROUP_LETTERS[g]+" · матч "+m});
+      }
+    }
+    return list;
+  }
+  var GROUP_MATCHES = buildGroupMatchList();
+
+  function buildPlayoffMatchList(){
+    var realWinners = ((state.allPicks[REAL_CODE]||{}).winners)||{};
+    var list = [];
+    ROUND_DEFS.forEach(function(rd){
+      var matches = getRound(rd.key, realWinners);
+      matches.forEach(function(m){
+        var a = m.teamA || "?"; var b = m.teamB || "?";
+        list.push({id:m.id, label: rd.label+": "+a+" – "+b});
+      });
+    });
+    return list;
+  }
+
+  function defaultBLPerson(){
+    return {
+      group: new Array(GROUP_MATCH_COUNT).fill(false),
+      playoff: new Array(TOTAL_MATCHES).fill(false),
+      advance: new Array(TOTAL_MATCHES).fill(false),
+      bracket: 0
+    };
+  }
+  function defaultBLTable(){
+    var data = {};
+    Object.keys(PARTICIPANTS).forEach(function(code){ data[code] = defaultBLPerson(); });
+    return {data:data, order: Object.keys(PARTICIPANTS).slice(), sortMode:'manual'};
+  }
+
+  async function loadBLTable(){
+    try{
+      var snapBL = await db.ref('bl_table').get();
+      var base = defaultBLTable();
+      if (snapBL.exists()){
+        var parsed = JSON.parse(snapBL.val());
+        Object.keys(base.data).forEach(function(code){
+          var p = parsed.data && parsed.data[code];
+          if (p){
+            base.data[code] = {
+              group: (Array.isArray(p.group) && p.group.length===GROUP_MATCH_COUNT) ? p.group : base.data[code].group,
+              playoff: (Array.isArray(p.playoff) && p.playoff.length===TOTAL_MATCHES) ? p.playoff : base.data[code].playoff,
+              advance: (Array.isArray(p.advance) && p.advance.length===TOTAL_MATCHES) ? p.advance : base.data[code].advance,
+              bracket: typeof p.bracket === 'number' ? p.bracket : 0
+            };
+          }
+        });
+        if (Array.isArray(parsed.order)){
+          base.order = parsed.order.filter(function(c){ return !!PARTICIPANTS[c]; });
+          Object.keys(PARTICIPANTS).forEach(function(c){ if (base.order.indexOf(c)===-1) base.order.push(c); });
+        }
+        base.sortMode = parsed.sortMode === 'sum' ? 'sum' : 'manual';
+      }
+      state.blTable = base;
+    }catch(e){
+      state.blTable = defaultBLTable();
+    }
+  }
+
+  var blSaveTimer = null;
+  function saveBLTable(){
+    if (blSaveTimer) clearTimeout(blSaveTimer);
+    blSaveTimer = setTimeout(function(){
+      try{ db.ref('bl_table').set(JSON.stringify(state.blTable)); }catch(e){}
+    }, 400);
+  }
+
+  // Обчислює бонуси одного треку
+  function computeTrackBonus(arr, baseValue){
+    var hitStreak = 0, missStreak = 0, total = 0;
+    var marks = new Array(arr.length).fill(null);
+    for (var i=0; i<arr.length; i++){
+      if (arr[i]){
+        var loseFire = missStreak >= BL_STREAK_LOSE;
+        hitStreak++;
+        var winFire = (hitStreak % BL_STREAK_WIN === 0);
+        if (loseFire){ marks[i] = 'lose'; total += baseValue; }
+        else if (winFire){ marks[i] = 'win'; total += baseValue; }
+        missStreak = 0;
+      } else {
+        missStreak++;
+        hitStreak = 0;
+      }
+    }
+    return {total:total, marks:marks};
+  }
+
+  function blScoreCounts(code){
+    var p = state.blTable.data[code];
+    var groupCount = p.group.filter(Boolean).length;
+    var playoffCount = p.playoff.filter(Boolean).length;
+    var advanceCount = p.advance.filter(Boolean).length;
+    var bracket = p.bracket || 0;
+    var advBonus = computeTrackBonus(p.advance, BL_BASE.advance);
+    var playBonus = computeTrackBonus(p.playoff, BL_BASE.playoff);
+    var bonusTotal = advBonus.total + playBonus.total;
+    var total = playoffCount*BL_BASE.playoff + advanceCount*BL_BASE.advance + bracket*BL_BASE.bracket + bonusTotal;
+    return {
+      groupCount:groupCount, playoffCount:playoffCount, advanceCount:advanceCount,
+      bracket:bracket, bonusTotal:bonusTotal, total:total, advBonus:advBonus, playBonus:playBonus
+    };
+  }
+
+  function isPastDeadline(){ return Date.now() > DEADLINE_TS; }
+
+  async function loadCustomDeadline(){
+    try {
+      var snapshot = await db.ref('custom_deadline').get();
+      if (snapshot.exists()) {
+        var ts = parseInt(snapshot.val(), 10);
+        if (!isNaN(ts)) DEADLINE_TS = ts;
+      }
+    } catch(e){}
+  }
+
+  async function saveCustomDeadline(ts){
+    DEADLINE_TS = ts;
+    try { await db.ref('custom_deadline').set(String(ts)); } catch(e){}
+    render();
+  }
+
+  function formatDeadlineExact(){
+    var d = new Date(DEADLINE_TS);
+    var months = ["січня","лютого","березня","квітня","травня","червня","липня","серпня","вересня","жовтня","листопада","грудня"];
+    var hh = String(d.getHours()).padStart(2,'0');
+    var mm = String(d.getMinutes()).padStart(2,'0');
+    return d.getDate()+' '+months[d.getMonth()]+' '+d.getFullYear()+', '+hh+':'+mm;
+  }
+
+  function tickTimers(){
+    var label = isPastDeadline() ? '' : ('⏱ '+deadlineLabel());
+    var g = document.querySelector('.global-timer');
+    if (g) g.innerHTML = isPastDeadline() ? '🔒 Прийом прогнозів закрито' : label;
+    var h = document.querySelector('.overlay-head .deadline-inline');
+    if (h) h.innerHTML = label;
+    if (isPastDeadline() && !state._deadlineLocked){
+      state._deadlineLocked = true;
+      render(); // one-time full re-render when deadline passes
+    }
+  }
+
+  function publicWinners(code){
+    if (code === REAL_CODE) return (state.allPicks[REAL_CODE]||{}).winners || {};
+    var d = state.allPicks[code] || {};
+    return d.submittedWinners || {};
+  }
+
+  function deadlineLabel(compact){
+    var diff = DEADLINE_TS - Date.now();
+    if (diff <= 0) return "Прийом прогнозів закрито";
+    var days = Math.floor(diff / 86400000);
+    var hours = Math.floor((diff % 86400000) / 3600000);
+    var mins = Math.floor((diff % 3600000) / 60000);
+    var secs = Math.floor((diff % 60000) / 1000);
+    var pre = compact ? "" : "До дедлайну: ";
+    if (days > 0) return pre+days+" дн "+hours+" год";
+    if (hours > 0) return pre+hours+" год "+mins+" хв";
+    return pre+mins+" хв "+secs+" с";
+  }
+
+  function pickWinner(code, matchId, team){
+    var data = state.allPicks[code] || {winners:{}, submittedWinners:null, submittedAt:null};
+    if (code !== REAL_CODE && isPastDeadline()) return; // hard lock after deadline
+    var winners = Object.assign({}, data.winners);
+    if (winners[matchId] === team){
+      delete winners[matchId];
+    } else {
+      winners[matchId] = team;
+    }
+    // cascade clear: any match in later rounds whose id depends on this one gets reset if its current value no longer matches
+    var order = ["r32","r16","qf","sf","final"];
+    var roundOf = matchId.split("-")[0];
+    var startIdx = order.indexOf(roundOf) + 1;
+    for (var i = startIdx; i < order.length; i++){
+      var rk = order[i];
+      var fresh = getRound(rk, winners);
+      fresh.forEach(function(m){
+        if (winners[m.id] && winners[m.id] !== m.teamA && winners[m.id] !== m.teamB){
+          delete winners[m.id];
+        }
+      });
+    }
+    var newData = {winners: winners, updatedAt: Date.now(), submittedWinners: data.submittedWinners||null, submittedAt: data.submittedAt||null};
+    state.allPicks[code] = newData;
+    render();
+    savePicks(code, newData);
+  }
+
+  function submitBracket(code){
+    if (isPastDeadline()) return;
+    var data = state.allPicks[code] || {winners:{}};
+    var newData = {winners: data.winners, updatedAt: Date.now(), submittedWinners: Object.assign({}, data.winners), submittedAt: Date.now()};
+    state.allPicks[code] = newData;
+    state.confirmSubmit = false;
+    state.bracketEditMode[code] = false; // back to read-only published view
+    render();
+    savePicks(code, newData);
+  }
+
+  function cancelEditing(code){
+    var data = state.allPicks[code] || {};
+    var revertedWinners = Object.assign({}, data.submittedWinners || {});
+    var newData = {winners: revertedWinners, updatedAt: Date.now(), submittedWinners: data.submittedWinners||null, submittedAt: data.submittedAt||null};
+    state.allPicks[code] = newData;
+    state.bracketEditMode[code] = false;
+    render();
+    savePicks(code, newData);
+  }
+
+  function resetAllPredictions(){
+    Object.keys(PARTICIPANTS).forEach(function(code){
+      var fresh = {winners:{}, updatedAt: Date.now(), submittedWinners:null, submittedAt:null};
+      state.allPicks[code] = fresh;
+      state.bracketEditMode[code] = true;
+      savePicks(code, fresh);
+    });
+    state.confirmReset = false;
+    render();
+  }
+
+  function exportBackup(){
+    var backup = {exportedAt: new Date().toISOString(), data: {}};
+    Object.keys(PARTICIPANTS).concat([REAL_CODE]).forEach(function(code){
+      backup.data[code] = state.allPicks[code] || {winners:{}, submittedWinners:null, submittedAt:null};
+    });
+    var blob = new Blob([JSON.stringify(backup, null, 2)], {type:'application/json'});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = 'wc2026-backup-'+new Date().toISOString().slice(0,16).replace(/[:T]/g,'-')+'.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
+  }
+
+  function importBackupFile(file){
+    var reader = new FileReader();
+    reader.onload = function(e){
+      try{
+        var parsed = JSON.parse(e.target.result);
+        var data = parsed.data || parsed; // tolerate raw dumps too
+        var codes = Object.keys(PARTICIPANTS).concat([REAL_CODE]);
+        codes.forEach(function(code){
+          if (data[code]){
+            state.allPicks[code] = data[code];
+            savePicks(code, data[code]);
+          }
+        });
+        state.importMsg = '✅ Дані відновлено з бекапу.';
+        render();
+      }catch(err){
+        state.importMsg = '❌ Не вдалося прочитати файл бекапу.';
+        render();
+      }
+    };
+    reader.readAsText(file);
+  }
+
+  // ---------- render ----------
+  var app = document.getElementById('app');
+
+  function teamBtnHTML(matchId, team, otherTeam, currentWinner, editable, realWinner, suppressCorrectBadge){
+    if (!team){
+      return '<div class="team-btn" style="opacity:.3;cursor:default;">— очікує —</div>';
+    }
+    var flag = FLAGS[team] || "🏳️";
+    var picked = currentWinner === team;
+    var loser = currentWinner && currentWinner !== team;
+    var isActuallyRight = !suppressCorrectBadge && realWinner && realWinner === team;
+    var isWrongPick = picked && realWinner && realWinner !== team;
+    var cls = "team-btn" + (picked?" picked":"") + (loser?" loser":"") + (isWrongPick?" wrong-pick":"") + (isActuallyRight?" actually-right":"");
+    var dis = editable ? "" : "disabled";
+    var badge = isActuallyRight ? '<span class="real-badge" title="Так було насправді">✅</span>' : (isWrongPick ? '<span class="real-badge wrong" title="Прогноз не справдився">❌</span>' : '');
+    return '<button class="'+cls+'" '+dis+' data-match="'+matchId+'" data-team="'+team.replace(/"/g,'&quot;')+'">'
+      + '<span class="flag">'+flag+'</span><span>'+team+'</span>'+badge+'</button>';
+  }
+
+  function roundSectionHTML(roundDef, winners, editable, expanded, locked, isRealView, suppressCorrectBadge){
+    var realWinners = isRealView ? {} : ((state.allPicks[REAL_CODE]||{}).winners || {});
+    var matches = getRound(roundDef.key, winners);
+    var filled = matches.filter(function(m){return m.winner;}).length;
+    var full = filled === matches.length;
+    var body = matches.map(function(m){
+      var real = realWinners[m.id] || null;
+      return '<div class="match">'
+        + teamBtnHTML(m.id, m.teamA, m.teamB, m.winner, editable && m.teamA && m.teamB, real, suppressCorrectBadge)
+        + '<span class="vs">VS</span>'
+        + teamBtnHTML(m.id, m.teamB, m.teamA, m.winner, editable && m.teamA && m.teamB, real, suppressCorrectBadge)
+        + '</div>';
+    }).join('');
+    return '<div class="round'+(locked?' locked':'')+'" data-round="'+roundDef.key+'">'
+      + '<div class="round-head" data-toggle="'+roundDef.key+'">'
+        + '<span class="rname">'+roundDef.label+'</span>'
+        + '<span class="rcount'+(full?' full':'')+'">'+filled+'/'+matches.length+(full?' ✓':'')+'</span>'
+      + '</div>'
+      + '<div class="round-body'+(expanded?'':' collapsed')+'">'+body+'</div>'
+      + '</div>';
+  }
+
+  function overlayHTML(code){
+    var isReal = code === REAL_CODE;
+    var name = isReal ? REAL_NAME : PARTICIPANTS[code];
+    var data = state.allPicks[code] || {winners:{}, submittedWinners:null, submittedAt:null};
+    var ownerEditable = isReal ? (state.session && state.session.isAdmin) : (state.session && state.session.code === code);
+    var deadlinePassed = !isReal && isPastDeadline();
+    var hasPublished = !isReal && !!data.submittedWinners;
+    var isAdminViewer = !isReal && !ownerEditable && state.session && state.session.isAdmin;
+    var adminPeeking = isAdminViewer && !!state.adminPeekDraft[code];
+    if (state.bracketEditMode[code] === undefined){
+      state.bracketEditMode[code] = !hasPublished;
+    }
+    var editModeOn = isReal ? true : !!state.bracketEditMode[code];
+    var showingDraft = isReal || (ownerEditable && editModeOn) || adminPeeking;
+    var winners = showingDraft ? (data.winners||{}) : (hasPublished ? data.submittedWinners : {});
+    var editable = ownerEditable && (isReal ? true : (editModeOn && !deadlinePassed));
+    var finalRound = getRound("final", winners);
+    var champion = finalRound[0] ? finalRound[0].winner : null;
+    var draftFilled = countFilled(data.winners||{});
+    var canSubmit = !isReal && ownerEditable && editModeOn && !deadlinePassed && draftFilled === TOTAL_MATCHES;
+    var canEnterEdit = !isReal && ownerEditable && !editModeOn && !deadlinePassed;
+    var canCancelEdit = !isReal && ownerEditable && editModeOn && hasPublished && !deadlinePassed;
+
+    var isOwnProfile = !isReal && state.session && state.session.code === code;
+    var skipRealMarks = isReal || adminPeeking || (!isOwnProfile && !hasPublished);
+    var posterOn = !!state.posterView[code];
+    var roundsHTML = posterOn ? '' : ROUND_DEFS.map(function(rd){
+      return roundSectionHTML(rd, winners, editable, !!state.expandedRound[rd.key], false, skipRealMarks, isOwnProfile);
+    }).join('');
+    var viewToggleHTML = '<div class="view-toggle">'
+      + '<button data-view="list" class="'+(posterOn?'':'active')+'">📋 Список</button>'
+      + '<button data-view="poster" class="'+(posterOn?'active':'')+'">🏆 Сітка</button>'
+      + '</div>';
+    var posterBlockHTML = posterOn ? ('<div style="margin:0 20px 18px;">'+posterHTML(winners)+'</div>') : '';
+
+    var lockedBanner = deadlinePassed
+      ? '<div class="readonly-note" style="border-color:var(--red);color:var(--red);">⏱ Дедлайн подачі минув — редагування закрито.</div>'
+      : '';
+    var peekBtn = isAdminViewer
+      ? '<div style="margin:0 20px 14px;"><button class="btn-ghost" id="adminPeekBtn" style="width:100%;padding:10px;font-size:12px;">'
+        + (adminPeeking ? '👁 Сховати чернетку, показати подане' : '🔍 Показати чернетку (адмін, не подано)')
+        + '</button></div>'
+      : '';
+    var adminPeekBanner = adminPeeking
+      ? '<div class="readonly-note" style="border-color:var(--blue);color:var(--blue);">🔍 Адмін-перегляд: це поточна чернетка, учасник її ще не подав і інші її не бачать.</div>'
+      : '';
+    var viewerNote = (!ownerEditable && !isReal)
+      ? '<div class="readonly-note">Перегляд чужої сітки — показано останню подану версію. Редагувати може лише власник коду.</div>'
+      : (!ownerEditable && isReal ? '<div class="readonly-note">Реальні результати вносить лише адмін.</div>' : '');
+    var modeNote = '';
+    if (!isReal && ownerEditable && !deadlinePassed){
+      if (editModeOn){
+        modeNote = hasPublished
+          ? '<div class="readonly-note" style="border-color:var(--gold);color:var(--gold);">✏️ Режим редагування. Зміни побачать інші лише після того, як ти подаси прогноз знову.</div>'
+          : '';
+      } else {
+        modeNote = '<div class="readonly-note" style="border-color:var(--green);color:var(--green);">✅ Показано подану версію (її бачать усі). Натисни "Редагувати", щоб змінити.</div>';
+      }
+    }
+    var deadlineHeaderHTML = (!isReal && !isPastDeadline())
+      ? '<div class="deadline-inline">⏱ '+deadlineLabel()+'</div>' : '';
+
+    var actionZone = '';
+    if (canEnterEdit){
+      actionZone = '<div style="margin:0 20px 14px;"><button class="btn-ghost" id="enterEditBtn" style="width:100%;padding:12px;">🔓 Редагувати прогноз</button></div>';
+    } else if (canSubmit){
+      actionZone = state.confirmSubmit
+        ? '<div class="readonly-note" style="border-color:var(--gold);">'+(hasPublished?'Оновити поданий прогноз?':'Подати прогноз?')+' Зможеш ще редагувати й подати знову до дедлайну.'
+            + '<div style="margin-top:10px;display:flex;gap:8px;">'
+            + '<button class="btn-primary" id="confirmSubmitBtn">Так, '+(hasPublished?'оновити':'подати')+'</button>'
+            + '<button class="btn-ghost" id="cancelSubmitBtn">Скасувати</button>'
+            + '</div></div>'
+        : '<div style="margin:0 20px 14px;display:flex;gap:8px;">'
+          + '<button class="btn-primary" id="openSubmitBtn" style="flex:1;padding:12px;">'+(hasPublished ? 'Оновити поданий прогноз' : 'Подати прогноз')+'</button>'
+          + (canCancelEdit ? '<button class="btn-ghost" id="cancelEditBtn" style="padding:12px 16px;">Скасувати</button>' : '')
+          + '</div>';
+    } else if (canCancelEdit){
+      actionZone = '<div style="margin:0 20px 14px;"><button class="btn-ghost" id="cancelEditBtn" style="width:100%;padding:12px;">Скасувати редагування</button></div>';
+    }
+
+    return '<div class="overlay" id="overlay">'
+      + '<div class="overlay-panel">'
+        + '<div class="overlay-head"><div><h2>'+name+'</h2>'+deadlineHeaderHTML+'</div><button class="close-x" id="closeOverlay">✕</button></div>'
+        + '<div class="overlay-body" id="overlayBody">'
+        + viewerNote + peekBtn + adminPeekBanner + lockedBanner + modeNote
+        + viewToggleHTML
+        + (posterOn ? '' : '<div class="trophy-zone'+(champion?' done':'')+'">'
+          + '<div class="trophy">🏆</div>'
+          + '<div class="champ-name'+(champion?'':' empty')+'">'+(champion ? champion : 'Чемпіон ще не визначений')+'</div>'
+        + '</div>')
+        + posterBlockHTML
+        + roundsHTML
+        + actionZone
+        + '<div class="save-row"><span class="save-pill">'+countFilled(winners)+' / '+TOTAL_MATCHES+' матчів заповнено</span>'
+          + (data.updatedAt ? '<span class="save-pill ok">збережено ✓</span>' : '<span class="save-pill">—</span>') + '</div>'
+        + '</div>'
+      + '</div></div>';
+  }
+
+  function dashCardHTML(code){
+    var name = PARTICIPANTS[code];
+    var data = state.allPicks[code] || {winners:{}, submittedWinners:null};
+    var pub = publicWinners(code);
+    var filled = countFilled(pub);
+    var pct = Math.round((filled/TOTAL_MATCHES)*100);
+    var hasPublished = !!data.submittedWinners;
+    var draftDiffers = hasPublished && JSON.stringify(data.winners||{}) !== JSON.stringify(data.submittedWinners||{});
+    var status;
+    if (isPastDeadline()) status = "Заблоковано 🔒";
+    else if (!hasPublished) status = "Ще не подано";
+    else if (draftDiffers) status = "Подано ✅ · редагує ✏️";
+    else status = "Подано ✅";
+    var finalRound = getRound("final", pub);
+    var champ = finalRound[0] ? finalRound[0].winner : null;
+    var mine = state.session && state.session.code === code;
+    var real = (state.allPicks[REAL_CODE]||{}).winners || {};
+    var scoreLine = countFilled(real) > 0 ? '<div class="champ-line" style="color:var(--blue);">⭐ '+computeScore(code)+' / '+TOTAL_MATCHES+' балів</div>' : '';
+    var isAdminUser = state.session && state.session.isAdmin;
+    var draftFilled = countFilled(data.winners||{});
+    var adminHint = (isAdminUser && !hasPublished && draftFilled > 0)
+      ? '<div class="champ-line" style="color:var(--muted);font-weight:500;">🔍 чернетка: '+draftFilled+'/'+TOTAL_MATCHES+' (адмін)</div>' : '';
+    return '<div class="card'+(mine?' mine':'')+'" data-open="'+code+'">'
+      + '<div class="pname">'+name+(mine?' 👑':'')+'</div>'
+      + '<div class="pstatus">'+status+'</div>'
+      + '<div class="progress-bar-track"><div class="progress-bar-fill" style="width:'+pct+'%"></div></div>'
+      + (champ ? '<div class="champ-line">🏆 '+champ+'</div>' : '')
+      + scoreLine
+      + adminHint
+      + '</div>';
+  }
+
+  function realCardHTML(){
+    var data = state.allPicks[REAL_CODE] || {winners:{}};
+    var filled = countFilled(data.winners || {});
+    var pct = Math.round((filled/TOTAL_MATCHES)*100);
+    var finalRound = getRound("final", data.winners || {});
+    var champ = finalRound[0] ? finalRound[0].winner : null;
+    return '<div class="card" style="border-color:var(--gold);background:linear-gradient(135deg, rgba(255,200,69,0.1), var(--bg-panel-2));" data-open="'+REAL_CODE+'">'
+      + '<div class="pname">🏟️ '+REAL_NAME+'</div>'
+      + '<div class="pstatus">'+(filled===0?'Турнір ще не стартував':pct+'% зіграно')+'</div>'
+      + '<div class="progress-bar-track"><div class="progress-bar-fill" style="width:'+pct+'%"></div></div>'
+      + (champ ? '<div class="champ-line">🏆 '+champ+'</div>' : '')
+      + '</div>';
+  }
+
+  function computeScore(code){
+    var real = (state.allPicks[REAL_CODE]||{}).winners || {};
+    var mine = publicWinners(code);
+    var total = 0;
+    Object.keys(mine).forEach(function(matchId){
+      if (real[matchId] && real[matchId] === mine[matchId]) total++;
+    });
+    return total;
+  }
+
+  function computeRoundScore(code, roundKey){
+    var real = (state.allPicks[REAL_CODE]||{}).winners || {};
+    var mine = publicWinners(code);
+    var matches = getRound(roundKey, real);
+    var score = 0;
+    matches.forEach(function(m){ if(m.winner && mine[m.id] === m.winner) score++; });
+    return score;
+  }
+
+  var BADGE_DEFS = [];
+
+  function computeBadges(){ return {}; }
+  function badgesHTML(){ return ''; }
+
+  function tabsHTML(){
+    var tabs = [["dash","Сітки"],["compare","Порівняння"],["leaderboard","Рейтинг"],["bl","Таблиця"]];
+    return '<div class="tabs">' + tabs.map(function(t){
+      return '<button class="tab-btn'+(state.activeTab===t[0]?' active':'')+'" data-tab="'+t[0]+'">'+t[1]+'</button>';
+    }).join('') + '</div>';
+  }
+
+  function adminPanelHTML(){
+    if (!state.session || !state.session.isAdmin) return '';
+
+    // Deadline management
+    var d = new Date(DEADLINE_TS);
+    var pad = function(n){ return String(n).padStart(2,'0'); };
+    var localISO = d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())+'T'+pad(d.getHours())+':'+pad(d.getMinutes());
+    var deadlineZone = '<div class="readonly-note" style="border-color:var(--blue);">'
+      + '<div style="font-weight:700;margin-bottom:8px;">⏱ Управління дедлайном</div>'
+      + '<div style="font-size:12px;color:var(--muted);margin-bottom:10px;">Поточний: '+formatDeadlineExact()+(isPastDeadline()?' <span style="color:var(--red);">• закрито</span>':' <span style="color:var(--green);">• відкрито</span>')+'</div>'
+      + '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">'
+        + '<input type="datetime-local" id="deadlineInput" value="'+localISO+'" style="flex:1;min-width:180px;background:var(--bg-deep);border:1px solid var(--line);color:var(--text);border-radius:8px;padding:8px 10px;font-size:13px;"/>'
+        + '<button class="btn-primary" id="saveDeadlineBtn" style="padding:8px 14px;white-space:nowrap;">Зберегти</button>'
+      + '</div>'
+      + '</div>';
+    var resetZone = state.confirmReset
+      ? '<div class="readonly-note" style="border-color:var(--red);color:var(--red);">Скинути всі прогнози учасників (чернетки й подані)? Дію не можна відмінити.'
+        + '<div style="margin-top:10px;display:flex;gap:8px;">'
+        + '<button class="btn-primary" id="confirmResetBtn" style="background:linear-gradient(90deg,var(--red),#ff8e8e);">Так, скинути все</button>'
+        + '<button class="btn-ghost" id="cancelResetBtn">Скасувати</button>'
+        + '</div></div>'
+      : '<button class="btn-ghost" id="openResetBtn" style="border-color:var(--red);color:var(--red);">🗑 Скинути всі прогнози учасників</button>';
+    var backupZone = '<div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:14px;">'
+      + '<button class="btn-ghost" id="exportBackupBtn">💾 Зберегти бекап</button>'
+      + '<label class="btn-ghost" for="importBackupInput" style="cursor:pointer;">📥 Відновити з бекапу</label>'
+      + '<input type="file" id="importBackupInput" accept=".json" style="display:none;"/>'
+      + '</div>'
+      + (state.importMsg ? '<div class="readonly-note" style="margin-top:10px;">'+state.importMsg+'</div>' : '');
+    var apiStatusIcon = {"idle":"⚪","loading":"⏳","ok":"✅","error":"❌","no-key":"🔑"}[fdSyncStatus] || "⚪";
+    var apiStatusText = {"idle":"Не синхронізовано","loading":"Завантаження...","ok":"Синхронізовано з football-data.org","error":"Помилка синхронізації (перевір ключ)","no-key":"Вставте API ключ у код"}[fdSyncStatus] || "";
+    var apiZone = '<div class="readonly-note" style="border-color:var(--blue);">'
+      + '<div style="font-weight:700;margin-bottom:8px;">🤖 Автосинхронізація офіційних результатів</div>'
+      + '<div style="font-size:12px;color:var(--muted);margin-bottom:12px;">Підтягує результати плей-офф ЧС з football-data.org автоматично</div>'
+      + '<div style="font-size:12px;margin-bottom:12px;">'+apiStatusIcon+' '+apiStatusText+'</div>'
+      + '<button class="btn-primary" id="syncAPIBtn" style="width:100%;padding:10px;">🔄 Синхронізувати зараз</button>'
+      + '</div>';
+    return '<div class="section-title">Адмін-панель</div>'
+      + '<div class="compare-wrap" style="text-align:center;">'
+      + '<div class="readonly-note">Як адмін ти бачиш чернетки учасників (ще не подані) — відкрий чиюсь сітку й натисни "Показати чернетку".</div>'
+      + deadlineZone
+      + '<div class="readonly-note" style="border-color:var(--gold);color:var(--gold);">⚠️ Перед кожною публікацією нової версії сайту тисни "Зберегти бекап" — це гарантія, що прогнози не загубляться навіть якщо посилання зміниться.</div>'
+      + apiZone
+      + resetZone
+      + backupZone
+      + '</div>';
+  }
+
+  function carouselHTML(){
+    var codes = [REAL_CODE].concat(Object.keys(PARTICIPANTS));
+    if (state.carouselIndex >= codes.length) state.carouselIndex = 0;
+    var code = codes[state.carouselIndex];
+    var isReal = code === REAL_CODE;
+    var name = isReal ? ('🏟️ ' + REAL_NAME) : PARTICIPANTS[code];
+    var winners = isReal ? ((state.allPicks[REAL_CODE]||{}).winners||{}) : publicWinners(code);
+    var dots = codes.map(function(c, i){
+      var isR = c === REAL_CODE;
+      return '<span class="dot'+(i===state.carouselIndex?' active':'')+(isR?' dot-real':'')+'" data-dot="'+i+'"></span>';
+    }).join('');
+    return '<div class="section-title">Сітки плей-офф</div>'
+      + '<div class="carousel-wrap" id="carouselWrap">'
+        + '<div class="carousel-name">'+name+'</div>'
+        + posterHTML(winners)
+        + '<div class="carousel-nav">'
+          + '<button class="btn-ghost" id="carPrev">‹</button>'
+          + '<div class="carousel-dots">'+dots+'</div>'
+          + '<button class="btn-ghost" id="carNext">›</button>'
+        + '</div>'
+      + '</div>';
+  }
+
+  function dashTabHTML(){
+    var cards = Object.keys(PARTICIPANTS).map(dashCardHTML).join('');
+    return '<div class="section-title">Учасники</div>'
+      + '<div class="dash-grid">'+cards+'</div>'
+      + carouselHTML()
+      + '<div class="section-title">Офіційний турнір</div>'
+      + '<div class="dash-grid" style="grid-template-columns:1fr;max-width:420px;">'+realCardHTML()+'</div>'
+      + adminPanelHTML();
+  }
+
+  function compareTabHTML(){
+    var codes = Object.keys(PARTICIPANTS).concat([REAL_CODE]);
+    var nameOf = function(c){ return c === REAL_CODE ? ("🏟️ "+REAL_NAME) : PARTICIPANTS[c]; };
+    if (!state.compareA) state.compareA = codes[0];
+    if (!state.compareB) state.compareB = codes[1] || codes[0];
+    var options = function(selected){
+      return codes.map(function(c){
+        return '<option value="'+c+'"'+(c===selected?' selected':'')+'>'+nameOf(c)+'</option>';
+      }).join('');
+    };
+    var winnersA = publicWinners(state.compareA);
+    var winnersB = publicWinners(state.compareB);
+    var realWinners = (state.allPicks[REAL_CODE]||{}).winners || {};
+
+    var roundsHTML = ROUND_DEFS.map(function(rd){
+      var matchesA = getRound(rd.key, winnersA);
+      var matchesB = getRound(rd.key, winnersB);
+      var matchesReal = getRound(rd.key, realWinners);
+      var rows = matchesA.map(function(mA, idx){
+        var mB = matchesB[idx];
+        var mR = matchesReal[idx];
+        var pickA = mA.winner;
+        var pickB = mB.winner;
+        var same = pickA && pickB && pickA === pickB;
+        var pairSrc = (mR.teamA && mR.teamB) ? mR : ((mA.teamA && mA.teamB) ? mA : ((mB.teamA && mB.teamB) ? mB : null));
+        var pairLabel = pairSrc ? (pairSrc.teamA+' — '+pairSrc.teamB) : 'Пара ще не визначена';
+        var realW = mR.winner || null;
+        var checkA = (pickA && realW && pickA === realW) ? ' <span class="cmp-correct-badge">✅ вгадано</span>' : '';
+        var checkB = (pickB && realW && pickB === realW) ? ' <span class="cmp-correct-badge">✅ вгадано</span>' : '';
+        var cellA = pickA ? '<span class="flag">'+(FLAGS[pickA]||'')+'</span> '+pickA+checkA : '<span class="empty">— не обрано —</span>';
+        var cellB = pickB ? '<span class="flag">'+(FLAGS[pickB]||'')+'</span> '+pickB+checkB : '<span class="empty">— не обрано —</span>';
+        return '<div class="cmp-pair">'+pairLabel+'</div><div class="cmp-row">'
+          + '<div class="cmp-cell'+(same?' match':'')+'">'+cellA+'</div>'
+          + '<div class="cmp-cell'+(same?' match':'')+'">'+cellB+'</div>'
+          + '</div>';
+      }).join('');
+      return '<div class="cmp-round"><div class="cmp-round-head">'+rd.label+'</div>'+rows+'</div>';
+    }).join('');
+
+    return '<div class="compare-wrap">'
+      + '<div class="compare-pickers">'
+        + '<select id="cmpA">'+options(state.compareA)+'</select>'
+        + '<select id="cmpB">'+options(state.compareB)+'</select>'
+      + '</div>'
+      + roundsHTML
+      + '</div>';
+  }
+
+  function leaderboardTabHTML(){
+    var real = (state.allPicks[REAL_CODE]||{}).winners || {};
+    var realFilled = countFilled(real);
+    var codes = Object.keys(PARTICIPANTS);
+    var rows = codes.map(function(code){
+      return {code:code, name:PARTICIPANTS[code], score: computeScore(code)};
+    }).sort(function(a,b){ return b.score - a.score; });
+
+    if (realFilled === 0){
+      return '<div class="lb-table"><div class="lb-empty">Офіційні результати ще не внесені — рейтинг з\'явиться, коли турнір почнеться.</div></div>';
+    }
+
+    var maxScore = Math.max.apply(null, rows.map(function(r){ return r.score; })) || 1;
+    var medals = ["🥇","🥈","🥉"];
+
+    // Classic table
+    var tableHTML = rows.map(function(r, i){
+      var mine = state.session && state.session.code === r.code;
+      return '<div class="lb-row'+(mine?' lb-mine':'')+'" data-open="'+r.code+'" style="cursor:pointer;">'
+        +'<span class="lb-rank">'+(medals[i]||('#'+(i+1)))+'</span>'
+        +'<span class="lb-name">'+r.name+'</span>'
+        +'<span class="lb-score">'+r.score+' / '+TOTAL_MATCHES+'</span>'
+        +'</div>';
+    }).join('');
+
+    // SVG bar chart
+    var W = 560, H = 200, PAD_L = 28, PAD_B = 44, PAD_T = 20, PAD_R = 16;
+    var chartW = W - PAD_L - PAD_R;
+    var chartH = H - PAD_T - PAD_B;
+    var barW = Math.floor(chartW / rows.length * 0.55);
+    var gap = Math.floor(chartW / rows.length);
+    var yMax = Math.max(maxScore, 4);
+
+    var bars = rows.map(function(r, i){
+      var x = PAD_L + i * gap + (gap - barW) / 2;
+      var bh = Math.round((r.score / yMax) * chartH);
+      var y = PAD_T + chartH - bh;
+      var mine = state.session && state.session.code === r.code;
+      var color = mine ? '#FFC845' : 'url(#barGrad)';
+      var firstName = r.name.split(' ')[0];
+      return '<rect x="'+x+'" y="'+y+'" width="'+barW+'" height="'+bh+'" rx="4" fill="'+color+'" opacity="0.9"/>'
+        +'<text x="'+(x+barW/2)+'" y="'+(y-5)+'" text-anchor="middle" font-size="11" fill="#F4F6FB" font-weight="700">'+r.score+'</text>'
+        +'<text x="'+(x+barW/2)+'" y="'+(H-8)+'" text-anchor="middle" font-size="10" fill="#8793B0">'+firstName+'</text>';
+    }).join('');
+
+    // Y axis lines
+    var yLines = [0, Math.round(yMax/2), yMax].map(function(v){
+      var y = PAD_T + chartH - Math.round((v/yMax)*chartH);
+      return '<line x1="'+PAD_L+'" y1="'+y+'" x2="'+(W-PAD_R)+'" y2="'+y+'" stroke="#28335E" stroke-width="1"/>'
+        +'<text x="'+(PAD_L-4)+'" y="'+(y+4)+'" text-anchor="end" font-size="9" fill="#8793B0">'+v+'</text>';
+    }).join('');
+
+    var svgChart = '<div style="overflow-x:auto;margin:0 auto 8px;max-width:640px;padding:0 20px;">'
+      +'<svg viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="xMidYMid meet" style="width:100%;max-width:'+W+'px;display:block;margin:0 auto;">'
+      +'<defs><linearGradient id="barGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#2F80FF"/><stop offset="100%" stop-color="#34D399"/></linearGradient></defs>'
+      + yLines + bars
+      +'</svg></div>';
+
+    return '<div class="lb-table">'+tableHTML+'</div>'
+      +'<div class="section-title">Вгадані матчі</div>'
+      + svgChart;
+  }
+
+  function blTableTabHTML(){
+    if (!state.blTable){
+      return '<div class="lb-empty">Завантаження таблиці\u2026</div>';
+    }
+    var isAdmin = !!(state.session && state.session.isAdmin);
+    var codes = state.blTable.order.slice();
+    var scores = {};
+    codes.forEach(function(c){ scores[c] = blScoreCounts(c); });
+    if (state.blTable.sortMode === 'sum'){
+      codes.sort(function(a,b){ return scores[b].total - scores[a].total; });
+    }
+    var controlsHTML = isAdmin ?
+      '<div class="bl-controls">'
+        + '<button id="blSortSum" class="bl-sort-btn'+(state.blTable.sortMode==='sum'?' active':'')+'">За сумою</button>'
+        + '<button id="blSortManual" class="bl-sort-btn'+(state.blTable.sortMode==='manual'?' active':'')+'">Вручну</button>'
+      + '</div>' : '';
+    var rowsHTML = codes.map(function(code, i){
+      var s = scores[code];
+      var moveHTML = (isAdmin && state.blTable.sortMode==='manual') ?
+        '<div class="bl-move">'
+          + '<button class="bl-move-btn" data-bl-move="'+code+'|up"'+(i===0?' disabled':'')+'>▲</button>'
+          + '<button class="bl-move-btn" data-bl-move="'+code+'|down"'+(i===codes.length-1?' disabled':'')+'>▼</button>'
+        + '</div>' : '';
+      var bracketCell = isAdmin
+        ? '<input type="number" class="bl-bracket-input" min="0" value="'+s.bracket+'" data-bl-bracket="'+code+'">'
+        : '<div class="bl-cell-static">'+s.bracket+'</div>';
+      return '<tr>'
+        + '<td class="bl-name-cell">'+moveHTML+'<span>'+PARTICIPANTS[code]+'</span></td>'
+        + '<td><button class="bl-cell" data-bl-cell="'+code+'|group">'+s.groupCount+'<span class="bl-cell-sub">/'+GROUP_MATCH_COUNT+'</span></button></td>'
+        + '<td><button class="bl-cell" data-bl-cell="'+code+'|playoff">'+s.playoffCount+'<span class="bl-cell-sub">/'+TOTAL_MATCHES+'</span></button></td>'
+        + '<td><button class="bl-cell" data-bl-cell="'+code+'|advance">'+s.advanceCount+'<span class="bl-cell-sub">/'+TOTAL_MATCHES+'</span></button></td>'
+        + '<td>'+bracketCell+'</td>'
+        + '<td><button class="bl-cell bl-cell-bonus" data-bl-cell="'+code+'|bonus">+'+s.bonusTotal+'</button></td>'
+        + '<td class="bl-total-cell">'+s.total+'</td>'
+      + '</tr>';
+    }).join('');
+    var panelHTML = state.blExpanded ? blExpandedPanelHTML(state.blExpanded.code, state.blExpanded.col) : '';
+    return '<div class="bl-tab">'
+      + controlsHTML
+      + '<div class="bl-scroll"><table class="bl-table">'
+        + '<thead><tr><th>Прогнозист</th><th>Групи</th><th>Плей-офф</th><th>Прохід далі</th><th>Сітка</th><th>Бонуси</th><th>Загалом</th></tr></thead>'
+        + '<tbody>'+rowsHTML+'</tbody>'
+      + '</table></div>'
+      + panelHTML
+    + '</div>';
+  }
+
+  function blDotClass(value, bonusMark, editable){
+    return 'bl-dot'
+      + (value ? ' filled' : '')
+      + (bonusMark==='win' ? ' bonus-win' : '')
+      + (bonusMark==='lose' ? ' bonus-lose' : '')
+      + (editable ? ' editable' : '');
+  }
+
+  function blExpandedPanelHTML(code, col){
+    var person = state.blTable.data[code];
+    if (!person) return '';
+    var isAdmin = !!(state.session && state.session.isAdmin);
+    var name = PARTICIPANTS[code];
+    var playoffMatches = buildPlayoffMatchList();
+    if (col === 'bonus'){
+      var advBonus = computeTrackBonus(person.advance, BL_BASE.advance);
+      var playBonus = computeTrackBonus(person.playoff, BL_BASE.playoff);
+      var advDots = person.advance.map(function(v,i){
+        var label = playoffMatches[i] ? playoffMatches[i].label : ('Матч '+(i+1));
+        return '<span class="'+blDotClass(v, advBonus.marks[i], false)+'" title="'+label+'"></span>';
+      }).join('');
+      var playDots = person.playoff.map(function(v,i){
+        var label = playoffMatches[i] ? playoffMatches[i].label : ('Матч '+(i+1));
+        return '<span class="'+blDotClass(v, playBonus.marks[i], false)+'" title="'+label+'"></span>';
+      }).join('');
+      return '<div class="bl-panel">'
+        + '<div class="bl-panel-head"><b>'+name+' \u00b7 Бонуси</b><button id="blClosePanel" class="bl-panel-close">✕</button></div>'
+        + '<div class="bl-panel-legend"><span class="legend-dot bonus-win"></span> Strike Win (кожен 3-й поспіль \u00d72) &nbsp; <span class="legend-dot bonus-lose"></span> Strike Lose (після 5 промахів \u00d72)</div>'
+        + '<div class="bl-track"><div class="bl-track-label">Переможці (Прохід далі) \u00b7 бонус +'+advBonus.total+'</div><div class="bl-dots">'+advDots+'</div></div>'
+        + '<div class="bl-track"><div class="bl-track-label">Точні рахунки (Плей-офф) \u00b7 бонус +'+playBonus.total+'</div><div class="bl-dots">'+playDots+'</div></div>'
+      + '</div>';
+    }
+    var arr = person[col];
+    var matchList = col==='group' ? GROUP_MATCHES : playoffMatches;
+    var colLabel = col==='group' ? 'Групи' : (col==='playoff' ? 'Рахунки (Плей-офф)' : 'Прохід далі');
+    var dots = arr.map(function(v,i){
+      var label = matchList[i] ? matchList[i].label : ('Матч '+(i+1));
+      var dataAttr = isAdmin ? ' data-bl-dot="'+code+'|'+col+'|'+i+'"' : '';
+      return '<span class="'+blDotClass(v, null, isAdmin)+'" title="'+label+'"'+dataAttr+'></span>';
+    }).join('');
+    return '<div class="bl-panel">'
+      + '<div class="bl-panel-head"><b>'+name+' \u00b7 '+colLabel+'</b><button id="blClosePanel" class="bl-panel-close">✕</button></div>'
+      + '<div class="bl-dots">'+dots+'</div>'
+    + '</div>';
+  }
+
+  function sessionBoxHTML(){
+    if (state.session){
+      return '<div class="session-box logged-in">'
+        + '<div><div class="session-name">'+state.session.name+'</div><div class="session-tag">'+(state.session.isAdmin?'Адмін-режим':'Сесія активна')+'</div></div>'
+        + '<button class="btn-ghost" id="logoutBtn">Вийти</button>'
+        + '</div>';
+    }
+    return '<div class="session-box">'
+      + '<div class="code-row"><input id="codeInput" placeholder="Введіть свій код доступу" maxlength="12" autocomplete="new-password" type="text"/>'
+      + '<button class="btn-primary" id="enterBtn">Увійти</button></div>'
+      + (state.err ? '<div class="err">'+state.err+'</div>' : '')
+      + '</div>';
+  }
+
+  function render(){
+    if (state.loading){
+      app.innerHTML = '<div style="padding:60px;text-align:center;color:var(--muted)">Завантаження сітки...</div>';
+      return;
+    }
+    var prevOverlayBody = document.getElementById('overlayBody');
+    var savedScroll = prevOverlayBody ? prevOverlayBody.scrollTop : 0;
+
+    var cards = Object.keys(PARTICIPANTS).map(dashCardHTML).join('');
+    var tabBody = state.activeTab === 'compare' ? compareTabHTML()
+      : state.activeTab === 'leaderboard' ? leaderboardTabHTML()
+      : state.activeTab === 'bl' ? blTableTabHTML()
+      : dashTabHTML();
+    var globalTimerHTML = !isPastDeadline()
+      ? '<div class="global-timer">⏱ '+deadlineLabel()+'</div><div class="deadline-exact">до '+formatDeadlineExact()+'</div>'
+      : '<div class="global-timer locked">🔒 Прийом прогнозів закрито</div>';
+    app.innerHTML =
+      '<div class="hero">'
+        + '<h1>FIFA World Cup 2026 · Predictor</h1>'
+        + '<div class="sub">Заповни сітку плей-офф і дізнайся, хто з друзів вгадає чемпіона</div>'
+        + globalTimerHTML
+        + sessionBoxHTML()
+        + tabsHTML()
+      + '</div>'
+      + '<div style="margin-top:28px;">'+tabBody+'</div>'
+      + '<footer class="note">Дані зберігаються спільно для всіх учасників. Редагувати можна лише власну сітку за своїм кодом.</footer>'
+      + (state.openOverlayCode ? overlayHTML(state.openOverlayCode) : '');
+
+    // bind events
+    var enterBtn = document.getElementById('enterBtn');
+    if (enterBtn) enterBtn.onclick = handleEnter;
+    var codeInput = document.getElementById('codeInput');
+    if (codeInput) codeInput.onkeydown = function(e){ if (e.key==='Enter') handleEnter(); };
+    var logoutBtn = document.getElementById('logoutBtn');
+    if (logoutBtn) logoutBtn.onclick = function(){ state.session = null; render(); };
+
+    document.querySelectorAll('[data-open]').forEach(function(el){
+      el.onclick = function(){
+        var code = el.getAttribute('data-open');
+        state.openOverlayCode = code;
+        state.expandedRound = {r32:true, r16:true, qf:true, sf:true, final:true};
+        var d = state.allPicks[code] || {};
+        var hasPublished = code !== REAL_CODE && !!d.submittedWinners;
+        state.bracketEditMode[code] = !hasPublished;
+        state.confirmSubmit = false;
+        render();
+      };
+    });
+    var closeBtn = document.getElementById('closeOverlay');
+    if (closeBtn) closeBtn.onclick = function(){ state.openOverlayCode = null; render(); };
+    var overlay = document.getElementById('overlay');
+    if (overlay) overlay.addEventListener('click', function(e){ if (e.target.id === 'overlay'){ state.openOverlayCode=null; render(); } });
+    var overlayBody = document.getElementById('overlayBody');
+    if (overlayBody){
+      overlayBody.scrollTop = savedScroll;
+      if (state.scrollToRound){
+        var targetEl = overlayBody.querySelector('[data-round="'+state.scrollToRound+'"]');
+        if (targetEl){
+          requestAnimationFrame(function(){
+            targetEl.scrollIntoView({behavior:'smooth', block:'nearest'});
+          });
+        }
+        state.scrollToRound = null;
+      }
+    }
+
+    document.querySelectorAll('[data-toggle]').forEach(function(el){
+      el.onclick = function(){
+        var k = el.getAttribute('data-toggle');
+        state.expandedRound[k] = !state.expandedRound[k];
+        state.scrollToRound = k;
+        render();
+      };
+    });
+
+    document.querySelectorAll('.team-btn[data-match]').forEach(function(el){
+      el.onclick = function(){
+        var matchId = el.getAttribute('data-match');
+        var team = el.getAttribute('data-team');
+        pickWinner(state.openOverlayCode, matchId, team);
+      };
+    });
+
+    document.querySelectorAll('[data-tab]').forEach(function(el){
+      el.onclick = function(){
+        state.activeTab = el.getAttribute('data-tab');
+        render();
+      };
+    });
+    var cmpA = document.getElementById('cmpA');
+    if (cmpA) cmpA.onchange = function(){ state.compareA = cmpA.value; render(); };
+    var cmpB = document.getElementById('cmpB');
+    if (cmpB) cmpB.onchange = function(){ state.compareB = cmpB.value; render(); };
+
+    var openSubmitBtn = document.getElementById('openSubmitBtn');
+    if (openSubmitBtn) openSubmitBtn.onclick = function(){ state.confirmSubmit = true; render(); };
+    var cancelSubmitBtn = document.getElementById('cancelSubmitBtn');
+    if (cancelSubmitBtn) cancelSubmitBtn.onclick = function(){ state.confirmSubmit = false; render(); };
+    var confirmSubmitBtn = document.getElementById('confirmSubmitBtn');
+    if (confirmSubmitBtn) confirmSubmitBtn.onclick = function(){ submitBracket(state.openOverlayCode); };
+    var enterEditBtn = document.getElementById('enterEditBtn');
+    if (enterEditBtn) enterEditBtn.onclick = function(){ state.bracketEditMode[state.openOverlayCode] = true; render(); };
+    var cancelEditBtn = document.getElementById('cancelEditBtn');
+    if (cancelEditBtn) cancelEditBtn.onclick = function(){ cancelEditing(state.openOverlayCode); };
+    var openResetBtn = document.getElementById('openResetBtn');
+    if (openResetBtn) openResetBtn.onclick = function(){ state.confirmReset = true; render(); };
+    var cancelResetBtn = document.getElementById('cancelResetBtn');
+    if (cancelResetBtn) cancelResetBtn.onclick = function(){ state.confirmReset = false; render(); };
+    var confirmResetBtn = document.getElementById('confirmResetBtn');
+    if (confirmResetBtn) confirmResetBtn.onclick = function(){ resetAllPredictions(); };
+    var syncAPIBtn = document.getElementById('syncAPIBtn');
+    if (syncAPIBtn) syncAPIBtn.onclick = syncFromAPI;
+    var saveDeadlineBtn = document.getElementById('saveDeadlineBtn');
+    if (saveDeadlineBtn) saveDeadlineBtn.onclick = function(){
+      var input = document.getElementById('deadlineInput');
+      if (!input || !input.value) return;
+      var ts = new Date(input.value).getTime();
+      if (!isNaN(ts)) saveCustomDeadline(ts);
+    };
+    var exportBackupBtn = document.getElementById('exportBackupBtn');
+    if (exportBackupBtn) exportBackupBtn.onclick = exportBackup;
+    var importBackupInput = document.getElementById('importBackupInput');
+    if (importBackupInput) importBackupInput.onchange = function(e){
+      if (e.target.files && e.target.files[0]) importBackupFile(e.target.files[0]);
+    };
+    var adminPeekBtn = document.getElementById('adminPeekBtn');
+    if (adminPeekBtn) adminPeekBtn.onclick = function(){
+      var c = state.openOverlayCode;
+      state.adminPeekDraft[c] = !state.adminPeekDraft[c];
+      render();
+    };
+
+    // view toggle (Список / Сітка) inside overlay
+    document.querySelectorAll('[data-view]').forEach(function(btn){
+      btn.onclick = function(e){
+        e.stopPropagation();
+        if (!state.openOverlayCode) return;
+        state.posterView[state.openOverlayCode] = (btn.getAttribute('data-view') === 'poster');
+        state.highlightTeam = null;
+        render();
+      };
+    });
+
+
+    // ---------- BL таблиця events ----------
+    if (state.activeTab === 'bl' && state.blTable){
+      document.querySelectorAll('[data-bl-cell]').forEach(function(el){
+        el.onclick = function(){
+          var parts = el.getAttribute('data-bl-cell').split('|');
+          var code = parts[0], col = parts[1];
+          if (state.blExpanded && state.blExpanded.code===code && state.blExpanded.col===col){
+            state.blExpanded = null;
+          } else {
+            state.blExpanded = {code:code, col:col};
+          }
+          render();
+        };
+      });
+      document.querySelectorAll('[data-bl-dot]').forEach(function(el){
+        el.onclick = function(){
+          if (!(state.session && state.session.isAdmin)) return;
+          var parts = el.getAttribute('data-bl-dot').split('|');
+          var code = parts[0], col = parts[1], idx = parseInt(parts[2],10);
+          var person = state.blTable.data[code];
+          if (!person || !person[col]) return;
+          person[col][idx] = !person[col][idx];
+          saveBLTable();
+          render();
+        };
+      });
+      document.querySelectorAll('[data-bl-bracket]').forEach(function(el){
+        el.onchange = function(){
+          var code = el.getAttribute('data-bl-bracket');
+          var v = parseInt(el.value, 10);
+          if (isNaN(v) || v < 0) v = 0;
+          state.blTable.data[code].bracket = v;
+          saveBLTable();
+          render();
+        };
+      });
+      var blSortSum = document.getElementById('blSortSum');
+      if (blSortSum) blSortSum.onclick = function(){ state.blTable.sortMode = 'sum'; saveBLTable(); render(); };
+      var blSortManual = document.getElementById('blSortManual');
+      if (blSortManual) blSortManual.onclick = function(){ state.blTable.sortMode = 'manual'; saveBLTable(); render(); };
+      document.querySelectorAll('[data-bl-move]').forEach(function(el){
+        el.onclick = function(){
+          var parts = el.getAttribute('data-bl-move').split('|');
+          var code = parts[0], dir = parts[1];
+          var order = state.blTable.order;
+          var idx = order.indexOf(code);
+          var swapWith = dir === 'up' ? idx - 1 : idx + 1;
+          if (swapWith < 0 || swapWith >= order.length) return;
+          var tmp = order[idx]; order[idx] = order[swapWith]; order[swapWith] = tmp;
+          saveBLTable();
+          render();
+        };
+      });
+      var blClosePanel = document.getElementById('blClosePanel');
+      if (blClosePanel) blClosePanel.onclick = function(){ state.blExpanded = null; render(); };
+    }
+
+    var carouselWrap = document.getElementById('carouselWrap');
+    if (carouselWrap){
+      var carCodes = [REAL_CODE].concat(Object.keys(PARTICIPANTS));
+      var n = carCodes.length;
+      document.getElementById('carPrev') && (document.getElementById('carPrev').onclick = function(){ state.carouselIndex = (state.carouselIndex - 1 + n) % n; render(); });
+      document.getElementById('carNext') && (document.getElementById('carNext').onclick = function(){ state.carouselIndex = (state.carouselIndex + 1) % n; render(); });
+      document.querySelectorAll('[data-dot]').forEach(function(el){
+        el.onclick = function(){ state.carouselIndex = parseInt(el.getAttribute('data-dot'),10); render(); };
+      });
+      var tx = null;
+      carouselWrap.addEventListener('touchstart',function(e){ tx = e.touches[0].clientX; },{passive:true});
+      carouselWrap.addEventListener('touchend',function(e){
+        if(tx===null) return;
+        var dx = e.changedTouches[0].clientX - tx; tx = null;
+        if(Math.abs(dx)>50){ state.carouselIndex=(state.carouselIndex+(dx<0?1:-1)+n)%n; render(); }
+      });
+    }
+  }
+
+  function handleEnter(){
+    var input = document.getElementById('codeInput');
+    var val = (input.value || '').trim().toUpperCase();
+    if (val === ADMIN_CODE){
+      state.session = {code:val, name:'Адміністратор', isAdmin:true};
+      state.err = "";
+    } else if (PARTICIPANTS[val]){
+      state.session = {code:val, name:PARTICIPANTS[val], isAdmin:false};
+      state.err = "";
+    } else {
+      state.err = "Невірний код доступу. Перевірте та спробуйте ще раз.";
+    }
+    render();
+  }
+
+  // ---------- init ----------
+  loadAll().then(function(data){
+    state.allPicks = data;
+    state.loading = false;
+    return loadCustomDeadline();
+  }).then(function(){
+    return loadBLTable();
+  }).then(function(){
+    render();
+    setInterval(tickTimers, 1000);
+    setInterval(syncFromAPI, 10 * 60 * 1000);
+
+    // single persistent click handler for poster flag interaction
+    document.addEventListener('click', function(e){
+      var tag = e.target.tagName;
+      if (tag === 'INPUT' || tag === 'BUTTON' || tag === 'SELECT' || tag === 'LABEL' || tag === 'TEXTAREA') return;
+      var flag = e.target.closest ? e.target.closest('[data-matchid]') : null;
+      if (flag){
+        var team = flag.getAttribute('data-team');
+        if (team){
+          state.highlightTeam = (state.highlightTeam === team) ? null : team;
+          render(); return;
+        }
+      }
+      var clear = e.target.closest ? e.target.closest('[data-clearhighlight]') : null;
+      if (clear){ state.highlightTeam = null; render(); }
+    });
+  });
+})();
+</script>
